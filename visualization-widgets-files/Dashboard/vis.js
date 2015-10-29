@@ -27,8 +27,6 @@ function Visualization( EEXCESSobj ) {
 	var colorIcon = ".color_icon";												                   // Class selector for div icon colored according to legend categories
 	var favIconClass = ".eexcess_fav_icon";                                                        // img element fpr favicon (either on or off)
     var bookmarkDetailsIconClass = ".eexcess_details_icon";                                        // img element with 3-dot icon in each list item used to display bookmarked item's details on click
-    var loadingMsgId = "#eexcess_message_on_canvas";											
-
 	
     var bookmarkDialogClass = ".eexcess-bookmark-dialog";                                          // Class selector for both types of dialog: save bookmark and see-and-edit-bookmark
     var saveBookmarkDialogId = "#eexcess-save-bookmark-dialog";                                    // Id for dialog poping up upon clicking on a "star" icon
@@ -82,7 +80,7 @@ function Visualization( EEXCESSobj ) {
 	var mappingSelectors;			    // Selector array for visual channel <select>. Necessary for event handlers
 	var indicesToHighlight = [];	    // array containing the indices of <li> elements to be highlighted in content list
 	var highlightedData = [];	    	// array containing the data elements to be highlighted in content list
-	var isBookmarkDialogOpen, selectedChartName;
+	var isBookmarkDialogOpen, selectedChartName, bookmarkingListOffset;
     //var idsArray;
     var bookmarkedItems;
 	var dashboardSettings = {
@@ -156,10 +154,14 @@ function Visualization( EEXCESSobj ) {
 			} else 
 				$('#screenshot').removeClass('enabled');
 		}
+		
+		if (settings.origin != undefined){
+            $.extend(LoggingHandler.origin, settings.origin);
+		}
 	};
 	
 	START.init = function(){
-
+        
 		VISPANEL.evaluateMinimumSize();
 		PREPROCESSING.bindEventHandlers();
 		timeVis = new Timeline(root, EXT);
@@ -268,6 +270,14 @@ function Visualization( EEXCESSobj ) {
     	return highlightedData;
     };
 
+    START.clearCanvasAndShowLoading = function(){
+    	VISPANEL.clearCanvasAndShowMessage( STR_LOADING );
+    };
+
+    START.clearCanvasAndHideLoading = function(){
+    	VISPANEL.clearCanvasAndShowMessage();
+    };
+
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -288,6 +298,11 @@ function Visualization( EEXCESSobj ) {
         // $('#demo-button-university').click(function (e) { $(this).addClass('checked'); $('#demo-button-historicalbuildings').removeClass('checked'); onDataReceived(getDemoResultsUniversity()); });
         // $('#demo-button-historicalbuildings').click(function (e) { $(this).addClass('checked'); $('#demo-button-university').removeClass('checked'); onDataReceived(getDemoResultsHistoricBuildings()); });
         $('#globalsettings').on('click', function (e) { e.preventDefault(); EVTHANDLER.globalSettingsButtonClicked(e) });
+        $('#vis_dashboard_info').on('click', function (e) { e.preventDefault(); EVTHANDLER.dashboardInfoButtonClicked(e) });
+        $('#vis_dashboard_feedback').on('click', function (e) { e.preventDefault(); EVTHANDLER.dashboardFeedbackButtonClicked(e) });
+        $('#sendDashboardFeedbackBtn').on('click', function (e) { e.preventDefault(); EVTHANDLER.sendFeedbackButtonClicked(e) });
+        $('#vis_dashboard_info').on('click', function (e) { e.preventDefault(); EVTHANDLER.visDashboardInfoButtonClicked(e) });
+        
         $(document).keyup(function (e) {
             if (e.keyCode == 27) { // ESC
                 FilterHandler.clearCurrent();
@@ -505,7 +520,7 @@ function Visualization( EEXCESSobj ) {
 
             if($(item).attr('isDynamic').toBool())
                 $(item).change(function(){
-                    var mapping = VISPANEL.internal.getSelectedMapping();
+                    var mapping = VISPANEL.internal.getSelectedMapping(this);
                     FilterHandler.initializeData(EXT.getOriginalData(), mapping);
 				    VISPANEL.drawChart( item );
                     FilterHandler.refreshAll();
@@ -568,14 +583,15 @@ function Visualization( EEXCESSobj ) {
     EVTHANDLER.linkImageClicked = function(d, i){
         d3.event ? d3.event.stopPropagation() : event.stopPropagation();
 		window.parent.postMessage({event:'eexcess.linkImageClicked', data: d}, '*');
-		//console.log('LinkImageClicked:');
-		//console.log(d);
+        
+		LoggingHandler.log({action: "Link item image clicked", itemId: d.id, itemTitle: d.title });
     };
 
     EVTHANDLER.linkItemClicked = function(d, i){
         d3.event ? d3.event.stopPropagation() : event.stopPropagation();
 		window.parent.postMessage({event:'eexcess.linkItemClicked', data: d}, '*');
-		//console.log(d);
+        
+		LoggingHandler.log({action: "Link item clicked", itemId: d.id, itemTitle: d.title });
     };
 
 
@@ -607,7 +623,7 @@ function Visualization( EEXCESSobj ) {
 
     ////////	'Cancel' button clicked in save bookmark dialog 	////////
     EVTHANDLER.bookmarkCancelButtonClicked = function(){
-        LoggingHandler.log({ action: "Bookmarkwindow canceled" });
+        LoggingHandler.log({ action: "Bookmarkwindow closed" });
         BOOKMARKS.destroyBookmarkDialog();
     };
 
@@ -624,10 +640,34 @@ function Visualization( EEXCESSobj ) {
         BOOKMARKS.destroyBookmarkDialog();
     };
 
-
-
     EVTHANDLER.removeBookmarkIconClicked = function(bookmark, bookmarkIndex) {
         BOOKMARKS.deleteBookmarkAndRefreshDetailsDialog(this, bookmark, bookmarkIndex);
+    }
+    
+     EVTHANDLER.dashboardInfoButtonClicked = function(e) {    
+    }
+    
+    EVTHANDLER.dashboardFeedbackButtonClicked = function(e) {
+        $("#vis_feeadback_dialog").dialog({
+            maxWidth:600,
+            maxHeight: 500,
+            width: 405,
+            height: 310,
+        });
+    }
+    
+    EVTHANDLER.sendFeedbackButtonClicked = function(e) {
+        var feedback = $("#visDashboardFeedbackContent").val();
+        LoggingHandler.log({ action: "Feedback sent", value: feedback});
+        alert("Thank you for your feedback")
+        $("#vis_feeadback_dialog").dialog("close");
+        
+    }
+    
+    EVTHANDLER.visDashboardInfoButtonClicked = function(e) {
+        var url = "media/visDashboardInfo.pdf"; 
+        window.open(url, 'pdf');  
+        
     }
     
     EVTHANDLER.globalSettingsButtonClicked = function(e) {
@@ -787,30 +827,41 @@ function Visualization( EEXCESSobj ) {
             // values retrieved in the previous step
             combinations.forEach(function(c, i){
 			
+			    
+			    var display = c.channel == "color" ? "" : "none";
                 var divChannel = d3.select(divMapping)
 				    .append("div")
 					.attr("class", "eexcess_mapping_container")
 					.attr("id", "eexcess_mapping_container_"+i);
 			
-                divChannel
-				    .append("span")
-				    .attr("class", "eexcess_controls_title")
-				    .text(c.channel);
+               /* divChannel
+                    .append("input")
+                    .attr("type", "button")
+                    .attr("class", "controllbutton")
+                    .attr("id", "colorSettings"); */
 			
                 var selector;
                 if(c.values.length > 1){
 
                     var channelSelect = divChannel
-				        .append("select")
-                            .attr("class", "eexcess_select")
+			       		 .append("ul")
+                            .attr("class", "eexcess_select jq-dropdown-menu")
 					        .attr("name", c.channel)
+					        .style("display", display)
                             .attr('isDynamic', true);
 			
                     var mappingOptions = "";
 
+					var checked = ""; 
                     c.values.forEach(function(v){
-				        mappingOptions += "<option class=\"ui-selected\" value=\""+v+"\">"+v+"</option>";
-                    });
+                    	if(checked == "") {
+                            checked = "checked";
+                            mappingOptions += "<li><label><input type=\"radio\" name=\"radio-group\" checked=\""+checked+"\" value=\""+v+"\" />"+ v + "</label></li>";
+                        }
+                        else {
+                            mappingOptions += "<li><label><input type=\"radio\" name=\"radio-group\" value=\""+v+"\" />"+ v + "</label></li>";
+                    	}
+                    })
                     channelSelect.html( mappingOptions );
 
                     selector = mappingSelect; // string for selecting a visual channel <select> element
@@ -820,6 +871,7 @@ function Visualization( EEXCESSobj ) {
                         .attr('class', 'eexcess_controls_facet_static')
                         .attr('name', c.channel)
                         .attr('isDynamic', false)
+                        .style("display", display)
                         .text(c.values[0]);
                     selector = ".eexcess_controls_facet_static";
                 }
@@ -1261,7 +1313,8 @@ function Visualization( EEXCESSobj ) {
                 });
 
                 var changedChannelName = $(changedItem).attr("name");
-                var changedChannelValue = $(changedItem).val();
+                var changedChannelValue = $(changedItem).find("input:radio:checked").first().val(); 
+                //var changedChannelValue = $(changedItem).val();
 
                 // selectedMapping remains unchanged if it contains a valid mapping combination, otherwise it's updated with the first valid one in the list
                 selectedMapping = this.getValidatedMappings(selectedMapping, changedChannelName, changedChannelValue);
@@ -1307,7 +1360,7 @@ function Visualization( EEXCESSobj ) {
             }
             // if loop finishes it means the selectedMapping isn't valid
             // Change <select> values according to the first valid mapping combination encountered (stored in validMapping)
-            CONTROLS.updateChannelsSelections(validMapping);
+            // CONTROLS.updateChannelsSelections(validMapping);
 
             // Return valid combination
             return validMapping;
@@ -1658,9 +1711,9 @@ function Visualization( EEXCESSobj ) {
         var newBookmarkOptions = bookmarkSettings.append("div")
             .attr("class", "eexcess-bookmark-dialog-optional");
 
-        newBookmarkOptions.append("div")
+        /*newBookmarkOptions.append("div")
             .attr("id", "eexcess-bookmak-dialog-color-picker")
-            .attr("title", "Select Color");
+            .attr("title", "Select Color"); */
 
         newBookmarkOptions.append("div")
             .attr("class", "eexcess-bookmark-dialog-input-wrapper")
@@ -1722,18 +1775,18 @@ function Visualization( EEXCESSobj ) {
         $(saveBookmarkDialogId).slideDown('slow');
 
         // make div icon a color picker
-        $( colorPickerId ).colorpicker({
+       /* $( colorPickerId ).colorpicker({
             'img' : IMG_COLOR_WHEEL_LARGE,
             'width' : 200,
             'height' : 200
-        });
+       }); */
     };
 
 
 
 
     BOOKMARKS.destroyBookmarkDialog = function(){
-        $( colorPickerId ).colorpicker('destroy');
+       //$( colorPickerId ).colorpicker('destroy');
         $( bookmarkDialogClass ).remove();
 
         isBookmarkDialogOpen = false;
@@ -1833,10 +1886,10 @@ function Visualization( EEXCESSobj ) {
 
     BOOKMARKS.deleteBookmarkAndRefreshDetailsDialog = function(sender, bookmark, bookmarkIndex){
 
-        var itemId = this.internal.getCurrentItem().id;
+        var item = this.internal.getCurrentItem();
         var itemIndex = this.internal.getCurrentItemIndex();
         
-        BookmarkingAPI.deleteItemFromBookmark(itemId, bookmark["bookmark-name"]);
+        BookmarkingAPI.deleteItemFromBookmark(item.id, bookmark["bookmark-name"]);
 
         // sender is img element with remove icon
         $(sender.parentNode).remove();
@@ -1844,18 +1897,17 @@ function Visualization( EEXCESSobj ) {
 		
 		BOOKMARKS.updateBookmarkedItems();
 
-        if(typeof bookmarkedItems[itemId] == 'undefined' || bookmarkedItems[itemId] == 'undefined')
+        if(typeof bookmarkedItems[item.id] == 'undefined' || bookmarkedItems[item.id] == 'undefined')
             LIST.turnFaviconOffAndHideDetailsIcon(itemIndex);
 			
 		FILTER.changeDropDownList();
 		
 		//update list and drop down list
 		$(filterBookmarkDialogId+">div>ul>li:eq("+currentSelectIndexPerFilter+")").trigger("click");
-
 		$(filterBookmarkDialogId+">div>ul").css("display","none");
 		$(filterBookmarkDialogId+">div").removeClass("active");
-		//update list and drop down list
-		
+        
+		LoggingHandler.log({ action: "Bookmark removed", itemId: item.id, itemTitle: item.title, value: bookmark["bookmark-name"] });
     };
 	
 	
@@ -2056,6 +2108,7 @@ function Visualization( EEXCESSobj ) {
 								 {'bookmark-name': demoHistoricBuildings, 'color': ''}], 
                                  bookmarks );		
 
+        bookmarkingListOffset = 2;
 	    var optionsData =  $.merge([{'bookmark-name': STR_SHOWALLRESULTS, 'color': ''}], demoData);
 		
 		var bookmarksListData = bookmarksListContainer.selectAll('li').data(optionsData);
@@ -2099,16 +2152,20 @@ function Visualization( EEXCESSobj ) {
 					//});
 					
 					input.data = [];
+                    data = [];
 					var bookmarkCount = 0;
 					currentBookmarkItems.forEach(function(item){
 						input.data.push(item);
 						indicesToHighlight.push(++bookmarkCount);
 					});
 					data = input.data;
-					
+                    originalData = input.data;
+                    FilterHandler.reset();
 					FILTER.updateData();
 					$(deleteBookmark).prop("disabled",false).css("background","");
 				}
+                
+                LoggingHandler.log({action: "Bookmark collection selected", value: evt})
 		   }
         });
 		
@@ -2155,6 +2212,7 @@ function Visualization( EEXCESSobj ) {
 				FILTER.updateData();
 				FILTER.showStars();
 				FILTER.updateData();
+                LoggingHandler.log({action: "Bookmark collection removed", value: bookmarkName });
 			} 
 
 		});
@@ -2210,7 +2268,7 @@ function Visualization( EEXCESSobj ) {
 				var bookmark = BOOKMARKS.internal.getCurrentBookmark();
 				if(bookmark['type'] == 'new' || bookmark['type'] == ''){
 					$(filterBookmarkDialogId+">div>ul>li:eq("+
-						BookmarkingAPI.getAllBookmarkNamesAndColors().length
+						(BookmarkingAPI.getAllBookmarkNamesAndColors().length + bookmarkingListOffset)
 					+")").trigger("click");
 				}else{
 					$(filterBookmarkDialogId+">div>ul>li:eq("+currentSelectIndex+")").trigger("click");
@@ -2230,12 +2288,11 @@ function Visualization( EEXCESSobj ) {
 		var bookmark = BOOKMARKS.internal.getCurrentBookmark();
 		
 		if( BOOKMARKS.internal.validateBookmarkToSave() ){
-		
-            LoggingHandler.log({ action: "Bookmarks added", value: bookmark['bookmark-name'] });
 
 			//var bookmark = BOOKMARKS.internal.getCurrentBookmark();
 			if(bookmark['type'] == 'new'){
 				BookmarkingAPI.createBookmark(bookmark['bookmark-name'], bookmark['color']);
+                LoggingHandler.log({ action: "Bookmark collection created", value: bookmark['bookmark-name'] });
 			}	
 
 			function addBookmarkFunc(currentData,index){
@@ -2251,15 +2308,16 @@ function Visualization( EEXCESSobj ) {
 				LIST.turnFaviconOnAndShowDetailsIcon(index);
 			}
 			
-			if(indicesToHighlight.length > 0){
-				var currentData;
-				indicesToHighlight.forEach(function(indexValue){
-					//console.log(indexValue);
-					//console.log(data[indexValue]);
-					
-					currentData = data[indexValue];
-					addBookmarkFunc(currentData,indexValue);
+            
+            var dataIdsToBookmark = FilterHandler.mergeFilteredDataIds();
+			if(dataIdsToBookmark.length > 0){
+				dataIdsToBookmark.forEach(function(dataItemId){
+                    var index = _.findIndex(data, function (d) { return d.id == dataItemId; });
+                    var dataItem = _.find(data, function (d) { return d.id == dataItemId; });
+					addBookmarkFunc(dataItem, index);
 				});
+                
+                LoggingHandler.log({ action: "Bookmarks added", value: bookmark['bookmark-name'], itemCount: dataIdsToBookmark.length });
 			}
 			
 			BOOKMARKS.destroyBookmarkDialog();
