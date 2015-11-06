@@ -120,7 +120,7 @@ function Visualization( EEXCESSobj ) {
         for (var i = 0; i < iframes.length; i++) {
             iframes[i].contentWindow.postMessage(msg, '*');
         }
-		window.parent.postMessage(msg, '*');
+        window.parent.postMessage(msg, '*');
     };
 
 	/**
@@ -168,6 +168,9 @@ function Visualization( EEXCESSobj ) {
 		}
 		
 		if (settings.origin != undefined){
+            if (settings.origin.userID == null || settings.origin.userID == '' || settings.origin.userID == '0')
+                settings.origin.userID = undefined;
+
             $.extend(LoggingHandler.origin, settings.origin);
 		}
 	};
