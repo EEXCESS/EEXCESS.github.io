@@ -3,10 +3,87 @@
 var SS = SS || {};
 SS.Screenshot = function () {
 
-    this.server = "http://www.interad.at/gerwald/eexcess/";
+    if (typeof window.parent.EVAL_SERVER === "undefined") {
+        console.warn("No EVAL_SERVER variable found. Consider deactivating Screenshot tool!");
+        this.server = "NO_SERVER_SET";
+    } else
+        this.server = window.parent.EVAL_SERVER;
+
     this.status_indicator = null;
 
+    this.createIndicator();
+    this.createBindings();
+
+
+    this.eval_session = this.getEvalSession();
+
+    this.counter = 0;
+
+
 };
+
+SS.Screenshot.prototype.getEvalSession = function () {
+    var params = window.parent.location.search;
+
+    if (!params.length) {
+        console.warn("Session-Number not set (Get-param 'session'). Assuming 1");
+        return 1;
+    }
+    var expr = /session=(\d*)/;
+    expr.exec(params);
+
+    var session = RegExp.$1;
+
+    if (session === "") {
+        console.warn("Could not get session from GET variable 'session'. Assuming 1");
+        return 1;
+    }
+    return parseInt(session);
+};
+
+
+SS.Screenshot.prototype.createIndicator = function () {
+    jQuery(document).ready(function () {
+        jQuery('body').prepend("<div id='scrsh_status'></div>");
+        this.status_indicator = jQuery('#scrsh_status');
+        this.status_indicator.css("position", "absolute");
+        this.status_indicator.css("top", "2px");
+        this.status_indicator.css("right", "22px");
+        this.status_indicator.css("width", "5px");
+        this.status_indicator.css("height", "5px");
+        this.status_indicator.css("background", "#D8D8D8");
+    }.bind(this));
+
+};
+
+SS.Screenshot.prototype.createBindings = function () {
+
+    var that = this;
+    jQuery(document).ready(function () {
+        jQuery('.filter-keep').click(function (e) {
+            var filterelement = jQuery(this).parent().parent().parent();
+            var title = filterelement.find("h4").html();
+            window.setTimeout(function () {
+                console.log(filterelement.attr("id"));
+                that.screenshot(title, "#" + filterelement.attr("id"), 4);
+            }, 500);
+
+        });
+
+
+        /**
+         * Further bindings here
+         */
+
+    });
+
+
+
+
+};
+
+
+
 SS.Screenshot.prototype.createDemoButton = function () {
     jQuery(document).ready(function () {
         var parent_elm = jQuery('#eexcess_controls');
@@ -24,11 +101,21 @@ SS.Screenshot.prototype.createDemoButton = function () {
         }.bind(this));
     }.bind(this));
 };
-SS.Screenshot.prototype.screenshot = function (title, selector) {
+SS.Screenshot.prototype.screenshot = function (title, selector, margin) {
 
     this.status_indicator.css("background", "orange");
 
     var user_id = localStorageCustom.getItem("userID");
+
+    if (!title) {
+        this.counter++;
+        title = this.counter;
+        if (this.counter < 10)
+            title = "00" + title;
+        else if (this.counter < 100)
+            title = "0" + title;
+    }
+
 
 
     var clipping = {
@@ -39,7 +126,7 @@ SS.Screenshot.prototype.screenshot = function (title, selector) {
     };
 
     if (selector)
-        var clipping_data = this.getClipping(selector);
+        var clipping_data = this.getClipping(selector, margin);
     if (clipping_data)
         clipping = clipping_data;
 
@@ -56,6 +143,7 @@ SS.Screenshot.prototype.screenshot = function (title, selector) {
         p_width: window.innerWidth,
         p_height: window.innerHeight,
         user_id: user_id,
+        eval_session: this.eval_session,
         title: title
     };
 
@@ -70,7 +158,10 @@ SS.Screenshot.prototype.screenshot = function (title, selector) {
     });
 };
 
-SS.Screenshot.prototype.getClipping = function (selector) {
+SS.Screenshot.prototype.getClipping = function (selector, margin) {
+
+    if (!margin)
+        margin = 0;
 
     var element = jQuery(selector);
     if (element.length > 1) {
@@ -82,10 +173,10 @@ SS.Screenshot.prototype.getClipping = function (selector) {
     }
 
     var clipping = {
-        l: parseInt(element.offset().left),
-        t: parseInt(element.offset().top),
-        w: parseInt(element.width()),
-        h: parseInt(element.height())
+        l: parseInt(element.offset().left) - margin,
+        t: parseInt(element.offset().top) - margin,
+        w: parseInt(element.width()) + margin,
+        h: parseInt(element.height()) + margin
     };
 
 
@@ -275,4 +366,4 @@ SS.Screenshot.prototype.fade_black = function () {
 };
 
 var screenshot = new SS.Screenshot();
-screenshot.createDemoButton();
+//screenshot.createDemoButton();
