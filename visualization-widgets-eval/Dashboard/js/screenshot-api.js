@@ -3,7 +3,7 @@
 var SS = SS || {};
 SS.Screenshot = function () {
 
-    this.server = "http://localhost/phantomjs/";
+    this.server = "http://www.interad.at/gerwald/eexcess/";
     this.status_indicator = null;
 
 };
