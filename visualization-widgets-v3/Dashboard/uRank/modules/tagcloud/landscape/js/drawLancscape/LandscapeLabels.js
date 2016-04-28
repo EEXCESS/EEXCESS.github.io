@@ -126,7 +126,7 @@ function LandscapeLabels() {
 				landscapeZoom.on("zoom",null);
 	       	})
 	       	.on("dragend", function(d,i) {
-	       		landscapeZoom.on("zoom", function() {console.log("tesssss"); landscapeController.stateCurrent.zoom()});
+	       		landscapeZoom.on("zoom", function() {landscapeController.stateCurrent.zoom()});
 				landscapeZoom.translate(landscapeTranslate)
 				landscapeZoom.scale(landscapeScale)		
 	       	})
@@ -289,7 +289,7 @@ function LandscapeLabels() {
 				var padding = (textBoxWidth+15-dummyTextWidth)/2;
 					svgcanvas.selectAll("#dummyLandscapeLabel2").remove();
 					landscapeLabels.append("svg:text")
-					.attr("id", "landscapeLabel_" + labelIndex)
+					.attr("id", "landscapeLabel_" + labelCounter)
 					.attr("dx", textBoxPosX  +  padding)
 					.attr("dy", (textBoxPosY + (labelCounter * textBoxHeight))+15)//
 					.attr("depth", labelDepth)
@@ -306,7 +306,7 @@ function LandscapeLabels() {
 					.on("mouseover",function(d, i) {
 						d3.select(this).style("cursor", "pointer")
 						if(landscapeConfig.getLandscapeType() == "standaloneLandscape") {
-							var label = $(this).html(); 
+							var label = $(this).text(); 
 							var stem = d3.select(this).attr("stem");
 							var colorCategory =  d3.select(this).attr("colorCategory");
 							var selctedTags = $("#eexcess_landscape_tag_cloud").find(".urank-tagcloud-tag");
@@ -346,7 +346,7 @@ function LandscapeLabels() {
 						}
 					})
 					.on("mouseout", function(d, i) {		
-							var label = $(this).html(); 
+							var label = $(this).text(); 
 							var stem = d3.select(this).attr("stem");
 							var colorCategory =  d3.select(this).attr("colorCategory");
 							var selctedTags = $("#eexcess_landscape_tag_cloud").find(".urank-tagcloud-tag");
@@ -380,7 +380,7 @@ function LandscapeLabels() {
 				        		d3.select(this).classed("isSelected", true);     		
 				        	}
 							*/
-							var label = $(this).html(); 
+							var label = $(this).text(); 
 							var stem = d3.select(this).attr("stem");
 							var colorCategory =  d3.select(this).attr("colorCategory");
 							var selctedTags = $("#eexcess_landscape_tag_cloud").find(".urank-tagcloud-tag");
