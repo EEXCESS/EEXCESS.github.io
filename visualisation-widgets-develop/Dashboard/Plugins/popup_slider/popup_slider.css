@@ -1,0 +1,46 @@
+.popup_slider{
+    /*width: 20px;
+    height: 35px;
+    margin: 10px 0px 30px 20px;
+    border: 1px solid green;*/
+    height: 100px;
+    margin-top: 10px;
+    margin-left: 45px;
+    margin-bottom: -30px;
+    padding: 10px;
+}
+
+.popup_slider .leaflet-popup-content-wrapper{
+    position: absolute;
+    width: 60px;
+    margin: 1px;
+    opacity: 0.8;
+}
+
+.popup_slider .leaflet-popup-content-wrapper .leaflet-popup-content{
+    width: 40px;
+    margin: 2px 0;
+    font-size: medium;
+    word-break: break-all;
+    word-wrap: break-word;
+    color: #1a321a;
+
+}
+
+.popup_slider .leaflet-popup-content-wrapper .leaflet-popup-content .popup_slider_checker{
+    margin: 1px 5px 1px 1px;
+    width: 100px;
+    font-size: 7px;
+}
+
+.popup_slider .leaflet-popup-tip-container{
+    visibility: hidden;
+}
+
+/* checkbox size */
+input[type=checkbox] {
+    /* All browsers except webkit*/
+    transform: scale(0.8);
+    /* Webkit browsers*/
+    -webkit-transform: scale(0.8);
+}
