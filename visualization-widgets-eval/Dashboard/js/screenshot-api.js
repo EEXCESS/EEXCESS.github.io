@@ -89,6 +89,7 @@ SS.Screenshot.prototype.createDemoButton = function () {
 
 SS.Screenshot.prototype.screenshot = function (title, selector, margin) {
 
+    console.log('starting with screenshot: ' + title + '; selector: ' + selector);
     this.status_indicator.css("background", "orange");
     var user_id = localStorageCustom.getItem("userID");
 
