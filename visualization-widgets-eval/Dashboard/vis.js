@@ -220,7 +220,6 @@ function Visualization( EEXCESSobj ) {
 
         LoggingHandler.init(EXT);
         LoggingHandler.log({ action: "Dashboard opened" });
-		screenshot.screenshot('start', 'body', 0);
         BookmarkingAPI = new Bookmarking();
         BookmarkingAPI.init();        
         PluginHandler.initialize(START, root, filterContainer);
