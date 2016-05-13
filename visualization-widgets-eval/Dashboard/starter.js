@@ -34,7 +34,6 @@ var onDataReceived = function (dataReceived, status) {
             visTemplate.clearCanvasAndHideLoading();
             visTemplate.refresh(globals);
             LoggingHandler.log({action: "New data received", itemCount: (globals["data"] || []).length});
-            $(document).on('ready', function(){ screenshot.screenshot('newitems', 'body', 0); });
         });
     } else {
         STARTER.sanitizeFacetValues(globals["data"]);
@@ -43,7 +42,6 @@ var onDataReceived = function (dataReceived, status) {
         visTemplate.clearCanvasAndHideLoading();
         visTemplate.refresh(globals);
         LoggingHandler.log({action: "New data received", itemCount: (globals["data"] || []).length});
-        $(document).on('ready', function(){ screenshot.screenshot('newitems', 'body', 0); });
     }
 
 
