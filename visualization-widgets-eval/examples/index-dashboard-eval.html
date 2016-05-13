@@ -35,7 +35,7 @@
              }
              */
             var userID = null;
-            var EVAL_SERVER = "http://localhost/phantomjs/";
+            var EVAL_SERVER = "https://ext250.know-center.tugraz.at/dashboard/visualization-widgets/screenshotserver/";
 
             requirejs.config({
                 //urlArgs: "bust=" + (new Date()).getTime(),
@@ -58,10 +58,10 @@
 
                 var onGettingEvalData = function (eval_server_data) {
 
-                    userID = eval_server_data.userId;
+                    userID = eval_server_data.user;
                     localStorageCustom.setItem('userID', userID);
-                    
-                    
+                    console.log("Hello evaluation-user '" + userID + "'!");
+
 
                     var origin = {clientType: 'Dashboard Standalone Example', clientVersion: '1', userID: userID};
                     api.init({origin: origin});
@@ -148,7 +148,7 @@
 
                 $.ajax({
                     type: "GET",
-                    url: EVAL_SERVER + "getEvalData.php",
+                    url: EVAL_SERVER + "eval/getEvalData.php",
                     data: {},
                     success: onGettingEvalData
                 });

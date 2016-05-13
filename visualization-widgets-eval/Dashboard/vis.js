@@ -206,6 +206,7 @@ function Visualization( EEXCESSobj ) {
 		timeVis = new Timeline(root, EXT);
 		barVis = new Barchart(root, EXT);
         geoVis = new Geochart(root, EXT);
+       
 		try{
         	urankVis = new UrankVis(root, EXT, EEXCESS);
 		} catch(ex){
@@ -248,9 +249,16 @@ function Visualization( EEXCESSobj ) {
 			});
 			
 			$('#eexcess-chartselection .chartbutton').on('click', function(){
+                /**
+                 * WebGlVis gets triggered via separate button. Just opens dialog
+                 * @see{WebGlVisPlugin}
+                 */ 
+                if ($(this).data('targetchart') === "WebGlVis")
+                    return true;
+                
 				$("#eexcess_select_chart").val($(this).data('targetchart')).change();
 			});
-
+            
             $(document)
             .on('mouseenter', "#eexcess_content_list", function(e){ LoggingHandler.componentMouseEnter('list'); })
             .on('mouseleave', "#eexcess_content_list", function(e){ LoggingHandler.componentMouseLeave('list'); })
@@ -354,6 +362,18 @@ function Visualization( EEXCESSobj ) {
     START.getBookmarkedItems = function(){
       return BOOKMARKDIALOG.BOOKMARKS.bookmarkedItems;  
     };
+    START.getPluginVis = function(type){
+        console.log("Getting the filter-vis-obj of type " + type);
+        switch (type) {
+            case "time": return timeVis;
+            case "category": return barVis;
+            case "geo": return geoVis;
+            case "keyword": return urankVis;
+            case "landscape": return landscapeVis;
+        }
+        return null;
+    };
+    
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	
