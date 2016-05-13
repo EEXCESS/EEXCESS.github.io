@@ -212,9 +212,13 @@ function Geochart(root, visTemplate) {
 
         GEO.map = L.map('mapInner');
         GEO.Render.centerMap();
-        L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
-        }).addTo(GEO.map);
+        try {            
+            L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(GEO.map);
+        } catch (error) {
+            console.warn("Error in Geochart:", error);
+        }
 
 
 		if(geoChartOption == "piechart")
@@ -334,6 +338,12 @@ function Geochart(root, visTemplate) {
 			}).attr("title", function(d){ return d.item; });
 
 		$('#eexcess_canvas').css("overflow", "hidden") 
+		
+		
+        if (USE_VIZREC) {
+            var tagBasedVisRec = new TagBasedVisRec();
+            tagBasedVisRec.attach(root); 
+        }
         
     };
     GEO.Render.deleteCurrentSelect = function () {
@@ -414,7 +424,11 @@ function Geochart(root, visTemplate) {
             GEO.Input.data[i].geoMarker = marker;
         }
 
-        GEO.map.addLayer(GEO.markersGroup);
+        try {            
+            GEO.map.addLayer(GEO.markersGroup);
+        } catch (error) {
+            console.warn("Error in Geochart:", error);
+        }
     };
 
     GEO.Render.Marker = L.Marker.extend({
@@ -597,8 +611,13 @@ function Geochart(root, visTemplate) {
             if(e.layer._childCount > 0)
                 createWheelSlider(e.layer._leaflet_id);
         });
-        GEO.map.addLayer(GEO.Markers);
-
+        
+        try {            
+            GEO.map.addLayer(GEO.Markers);
+        } catch (error) {
+            console.warn("Error in Geochart:", error);
+        }
+        
         GEO.map.on('zoomend', function(e){
 
             GEO.Render.deleteCurrentSelect();

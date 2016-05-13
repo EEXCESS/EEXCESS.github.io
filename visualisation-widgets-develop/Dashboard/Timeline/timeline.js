@@ -75,7 +75,6 @@ function Timeline( root, visTemplate ){
 		var dataToHighlight = [];
 		var currentYear = 0;
 		data.forEach(function(d, i){
-            console.log("FILTERLISTPERTIME",d);
 			if(d.hasOwnProperty("year")){	
 				currentYear = d.year.getFullYear();
 				if(minDateInYears <= currentYear && currentYear <= maxDateInYears){
@@ -766,8 +765,8 @@ function Timeline( root, visTemplate ){
             createPieData(pieData, allColorChannel, dataDictWithTime);
 			
             for(var i = 0; i < pieData.length; i++) {
-                if((pieData[i].language.length == 1 && pieData[i].language[0].value == 1)
-					|| (pieData[i].provider.length == 1 && pieData[i].provider[0].value == 1))
+                if((typeof pieData[i].language !== "undefined" && pieData[i].language.length == 1 && pieData[i].language[0].value == 1)
+					|| (typeof pieData[i].provider !== "undefined" && pieData[i].provider.length == 1 && pieData[i].provider[0].value == 1))
                     nodeElems.push(pieData[i]);
                 else
                     pieElems.push(pieData[i]);
@@ -856,6 +855,13 @@ function Timeline( root, visTemplate ){
                 })
                 //.style("opacity", 0.3)
                 .text(function (d) {
+                    //console.log(Object.keys(dataDictWithTime[d[keyForData]]),d.cx.toString());
+
+                    if (typeof dataDictWithTime[d[keyForData]][d.cx.toString()] === "undefined") {
+                        console.warn("Timeline: No key with date '"+ d.cx.toString() + "' found in the following object:",dataDictWithTime[d[keyForData]]);
+                        return false;
+                    }
+
                     var numberWithSameTime = dataDictWithTime[d[keyForData]][d.cx.toString()]["total"];
                     if (numberWithSameTime > 1) {
                         return numberWithSameTime;
@@ -978,6 +984,12 @@ function Timeline( root, visTemplate ){
 		// Set brush's initial extension	
 		var brushExtent = [x.invert(0), x.invert(width)];
 		context.select(".brush").call(brush.extent(brushExtent));
+		
+		
+        if (USE_VIZREC) {
+            var tagBasedVisRec = new TagBasedVisRec();
+            tagBasedVisRec.attach(root); 
+        }
 		
 	};	// end Render.draw
 
@@ -1359,7 +1371,7 @@ function Timeline( root, visTemplate ){
 			
 			for(var i = 0; i < pieData.length; i++) {
                 if((pieData[i].language.length == 1 && pieData[i].language[0].value == 1)
-					|| (pieData[i].provider.length == 1 && pieData[i].provider[0].value == 1))
+					|| (typeof pieData[i].provider !== "undefined" && pieData[i].provider.length == 1 && pieData[i].provider[0].value == 1))
                     nodeElems.push(pieData[i]);
                 else
                     pieElems.push(pieData[i]);
@@ -1448,6 +1460,12 @@ function Timeline( root, visTemplate ){
                 })
                 //.style("opacity", 0.3)
                 .text(function (d) {
+                    
+                    if (typeof dataDictWithTime[d[keyForData]][d.cx.toString()] === "undefined") {
+                        console.warn("Timeline: No key with date '"+ d.cx.toString() + "' found in the following object:",dataDictWithTime[d[keyForData]]);
+                        return false;
+                    }
+                    
                     var numberWithSameTime = dataDictWithTime[d[keyForData]][d.cx.toString()]["total"];
                     if (numberWithSameTime > 1) {
                         return numberWithSameTime;
