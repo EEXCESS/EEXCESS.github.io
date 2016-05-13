@@ -62,7 +62,7 @@ SS.Screenshot.prototype.createBindings = function () {
             window.setTimeout(function () {
                 console.log(filterelement.attr("id"));
                 that.screenshot(title, "#" + filterelement.attr("id"), 4);
-            }, 500);
+            }, 0);
         });
 
         /**
