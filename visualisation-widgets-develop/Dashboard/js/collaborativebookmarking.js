@@ -2,7 +2,7 @@ var CollaborativeBookmarkingAPI = {
     active: true,
     server: "https://ext250.know-center.tugraz.at/dashboard/visualization-widgets/collaborativebookmarking/bookmarks.php",
     get_key: "collection",
-    static_cb_link_: "http://eexcess.github.io/visualisation-widgets-develop/examples/index-dashboard.html"
+    static_share_url: "http://eexcess.github.io/visualisation-widgets-develop/examples/index-dashboard.html"
 };
 
 CollaborativeBookmarkingAPI.registerClickEvents = function () {
@@ -23,13 +23,15 @@ CollaborativeBookmarkingAPI.registerClickEvents = function () {
 
 CollaborativeBookmarkingAPI.buildLink = function (id) {
 
-    var location = "";
+
+    var location;
     try {
         location = window.parent.location.href;
-    } catch (error) {
-        location = this.static_cb_link_;
-    }
 
+    } catch (error) {
+        location = this.static_share_url;
+    }
+    
     var regex = new RegExp("[?]?" + this.get_key + "=([^&]*)");
     location = location.replace(regex, "");
     location = location.replace("&&", "&");
