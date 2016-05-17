@@ -143,8 +143,22 @@ function Visualization( EEXCESSobj ) {
 	 * */
 	START.updateSettings = function(settings){		
 		
+        // console.log("SETTINGS:",settings);
+        
 		$.extend(dashboardSettings, settings);
 		
+        
+        if (typeof settings.overwrittenColorMapping !== "undefined") {
+            
+            var color_mapping_inputs = jQuery('.eexcess_mapping_container').find(jQuery('input[name="color_mapping"]'));
+            color_mapping_inputs.each(function(){
+                if (jQuery(this).val() === settings.overwrittenColorMapping) {
+                    // console.log("CLICKING ON ",settings.overwrittenColorMapping);
+                    jQuery(this).click();
+                }
+            });
+        }
+        
 		if (settings.selectedChart != undefined){
 			$(chartSelect).val(settings.selectedChart).change();
 		}		
@@ -192,8 +206,9 @@ function Visualization( EEXCESSobj ) {
 		}
 	};
 	
+    START.is_initialized =false;
 	START.init = function(){
-        
+
         BOOKMARKDIALOG.populate(jQuery('#eexcess_content'), true);
         
         VISPANEL.initHighlightFeedbackButton();
@@ -272,6 +287,7 @@ function Visualization( EEXCESSobj ) {
             .on('mouseleave', "#eexcess-filtercontainer", function(e){ LoggingHandler.componentMouseLeave('filters'); })
             ;
 	    });
+        START.is_initialized = true;
 	};
 
 
@@ -282,7 +298,7 @@ function Visualization( EEXCESSobj ) {
      *
      * */
     START.refresh = function(input){
-
+        
         if(typeof input == 'undefined' || input == 'undefined'){
             VISPANEL.clearCanvasAndShowMessage( STR_NO_DATA_RECEIVED );
             return;
@@ -292,13 +308,20 @@ function Visualization( EEXCESSobj ) {
         height = $(window).height();
 
         var mapping = VISPANEL.internal.getSelectedMapping();
+        
+        
+        if (vizRecConnector && USE_VIZREC) {
+            //console.log(vizRecConnector.getMapping(VISPANEL.chartName));
+            mapping =  vizRecConnector.getMapping(VISPANEL.chartName);
+        }
+
         FilterHandler.initializeData(input.data, mapping);
         data = input.data; //receivedData;													// contains the data to be visualized
         originalData = input.data;
         charts = input.charts; //receivedCharts;
         mappings = input.mappingcombination; //PREPROCESSING.getFormattedMappings( receivedMappings );		// contains all the possible mapping combiantions for each type of visualization
         query = input.query;													// string representing the query that triggered the current recommendations
-
+        
         // Initialize template's elements
         PREPROCESSING.setAncillaryVariables();
         BOOKMARKS.updateBookmarkedItems();
@@ -332,7 +355,7 @@ function Visualization( EEXCESSobj ) {
     START.getData = function(){
     	return data;
     };
-
+        
     START.getHighlightedData = function(){
     	return highlightedData;
     };
@@ -343,6 +366,10 @@ function Visualization( EEXCESSobj ) {
 
     START.clearCanvasAndHideLoading = function(){
     	VISPANEL.clearCanvasAndShowMessage();
+    };
+    
+    START.getCurrentVisName = function(){
+        return EXT.getSelectedChartName();
     };
     
 
@@ -357,6 +384,9 @@ function Visualization( EEXCESSobj ) {
     };
     START.getBookmarkedItems = function(){
       return BOOKMARKDIALOG.BOOKMARKS.bookmarkedItems;  
+    };
+    START.getCurrentMapping = function(){
+        return VISPANEL.internal.getSelectedMapping();
     };
     START.getPluginVis = function(type){
         console.log("Getting the filter-vis-obj of type " + type);
@@ -616,6 +646,7 @@ function Visualization( EEXCESSobj ) {
             if($(item).attr('isDynamic').toBool())
                 $(item).change(function(){
                     var mapping = VISPANEL.internal.getSelectedMapping(this);
+
                     FilterHandler.initializeData(EXT.getOriginalData(), mapping);
 				    VISPANEL.drawChart( this );
                     FilterHandler.refreshAll();
@@ -743,7 +774,7 @@ function Visualization( EEXCESSobj ) {
     EVTHANDLER.globalSettingsButtonClicked = function(e) {
         LoggingHandler.log({ action: "Settings clicked"})
     	var xPos =  e.clientX - 250;
-	    var yPos = e.clientY - 50;
+	    var yPos = e.clientY;
 		if ($("#global-setttings-dialog").length){
 			$("#global-setttings-dialog").css('visibility', 'visible');
 			return; 
@@ -781,7 +812,7 @@ function Visualization( EEXCESSobj ) {
 		var landscapeTagCloudOption = '<div><input type="radio" name="tagcloud" value="landscape-tagcloud">landscape-tagcloud</input></div>';
 
        $("#global-setttings-dialog").append(tagCloudOptions); 
-	   
+       
 	   var geoChooserContainer = dialogGlobalSettings.append('div')
 			.attr("id", "diyplay_type_chooser")
 
@@ -800,6 +831,17 @@ function Visualization( EEXCESSobj ) {
 		//var imgGeoChartOption = '<div><input type="radio" name="displaytype" value="image">Imgs_GeoCharts</input></div>';
 
         $("#global-setttings-dialog").append(displayTypeOptions);
+        
+        //$("#global-setttings-dialog").append(tagGeoOptions);
+        
+        
+        
+        var experimental_container = jQuery("<div id='eexcess_settings_experimental_container'><p><strong>EXPERIMENTAL FEATURES:</strong></p></div>");
+        $("#global-setttings-dialog").append(experimental_container);
+        
+        if (VizRecConnector)
+            VizRecConnector.createSettingsEntry();        
+       
        
        dialogGlobalSettings.append("div").style("text-align", "center" )       
        		.append("input")
@@ -1393,7 +1435,7 @@ function Visualization( EEXCESSobj ) {
          * Sets the chart and the mapping combination to be used, acording to the <select> elements' selected values
          * */
         getSelectedMapping: function( item ) {
-
+            
             // if "item" is undefined -> change triggered by chart <select>, otherwise triggered by one  of the visual channels' <select>
             var changedItem = item || "undefined";
 
@@ -1405,7 +1447,7 @@ function Visualization( EEXCESSobj ) {
             VISPANEL.chartName = $(chartSelect).val();
 
             var selectedMapping = [];
-
+            
             if(changedItem == "undefined"){
                 // VISPANEL SELECTION CHANGED
                 // Empty current visual channels controls (<select> elements)
@@ -1436,7 +1478,8 @@ function Visualization( EEXCESSobj ) {
                 // selectedMapping remains unchanged if it contains a valid mapping combination, otherwise it's updated with the first valid one in the list
                 selectedMapping = this.getValidatedMappings(selectedMapping, changedChannelName, changedChannelValue);
             }
-
+            
+//            console.log(mappingSelectors, selectedMapping);     
             return selectedMapping;
         },
 
@@ -1525,46 +1568,93 @@ function Visualization( EEXCESSobj ) {
 	 * */
 	VISPANEL.drawChart = function( item ){
         
-		if ($(root).width() == 0) // workaround: problem, at the beginning, all visualisations get initialized too soon and too often.
-			return; 
-		
-		$(root).empty();		
-        // cleanup added controls:
-        $('#eexcess_vis_panel').children().not('#eexcess_canvas').remove()
-        $('#eexcess_main_panel').removeClass('urank'); // removing urank class
-		$('.urank-hidden-scrollbar-inner ul').unwrap();
-		$('.urank-hidden-scrollbar').removeClass('urank-hidden-scrollbar');
-		LIST.buildContentList();
+        /*
+         * Encapsulating the draw-functionality to prevent time-specific loading errors
+         * The draw is called asynchronously afte 0ms.
+         * If an error occurs it gets re-called with a higher timeout.
+         * Unless a limit of re-calls get reached, it gets repeated until no loading-error occurs.
+         * P.H. 09.05.16
+         */
+        
+        var draw_timeout = 0;
+        var max_tries = 10;
+        var curr_tries = 0;
+        var async_draw_fct = function(){
+            window.setTimeout(function(){
+                
+                curr_tries ++;
+                if (curr_tries > max_tries) {
+                    console.error("Too much retries ("+max_tries+") in drawChart-Function");
+                    return;
+                }
+                    
+                //console.log("Async part of drawchart called");
+                if ($(root).width() == 0) // workaround: problem, at the beginning, all visualisations get initialized too soon and too often.
+                    return; 
 
-		var oldChartName = VISPANEL.chartName;
-		var selectedMapping = this.internal.getSelectedMapping( item );
-		if (oldChartName != VISPANEL.chartName){
-            LoggingHandler.log({action: "Chart changed", old: oldChartName, new: VISPANEL.chartName});
-			VISPANEL.chartChanged(oldChartName, VISPANEL.chartName);
-		}
-        selectedChartName = VISPANEL.chartName;
-			
-		$('#screenshot').removeClass('notAvailable');
-		if (VISPANEL.chartName == 'geochart' || VISPANEL.chartName == 'uRank' || VISPANEL.chartName == 'landscape')
-			$('#screenshot').addClass('notAvailable');
+                $(root).empty();		
+                // cleanup added controls:
+                $('#eexcess_vis_panel').children().not('#eexcess_canvas').remove()
+                $('#eexcess_main_panel').removeClass('urank'); // removing urank class
+                $('.urank-hidden-scrollbar-inner ul').unwrap();
+                $('.urank-hidden-scrollbar').removeClass('urank-hidden-scrollbar');
+                LIST.buildContentList();
 
-		var plugin = PluginHandler.getByDisplayName(VISPANEL.chartName);
-		if (plugin != null){
-			if (plugin.Object.draw != undefined)
-				plugin.Object.draw(data, selectedMapping, width, height);		
-		} else {
-			switch(VISPANEL.chartName){		// chartName is assigned in internal.getSelectedMapping() 
-				case "timeline" : timeVis.draw(data, selectedMapping, width, height); break;
-				case "barchart":  barVis.draw(data, selectedMapping, width, height); break;
-	            case "geochart":  geoVis.draw(data, selectedMapping, width, height); break;
-                case "urank":  urankVis.draw(data, selectedMapping, width, height); break;
-                case "landscape":  landscapeVis.draw(data, selectedMapping, width, height); break;
-				default : d3.select(root).text("No Visualization");	
-			}
-		}
+                var oldChartName = VISPANEL.chartName;
+                var selectedMapping = this.internal.getSelectedMapping( item );
+                if (oldChartName != VISPANEL.chartName){
+                    LoggingHandler.log({action: "Chart changed", old: oldChartName, new: VISPANEL.chartName});
+                    VISPANEL.chartChanged(oldChartName, VISPANEL.chartName);
+                }
+                selectedChartName = VISPANEL.chartName;
 
-		LIST.setColorIcon();
-		LIST.highlightListItems();
+                $('#screenshot').removeClass('notAvailable');
+                if (VISPANEL.chartName == 'geochart' || VISPANEL.chartName == 'uRank' || VISPANEL.chartName == 'landscape')
+                    $('#screenshot').addClass('notAvailable');
+
+                var plugin = PluginHandler.getByDisplayName(VISPANEL.chartName);
+                if (plugin != null){
+                    if (plugin.Object.draw != undefined) {
+                        plugin.Object.draw(data, selectedMapping, width, height);		
+                        LIST.setColorIcon();
+                        LIST.highlightListItems();
+                    }
+                } else {
+                    
+                    selectedMapping = !item && vizRecConnector && USE_VIZREC &&
+                        vizRecConnector.getMapping(VISPANEL.chartName) !== false ? 
+                        vizRecConnector.getMapping(VISPANEL.chartName) :
+                        selectedMapping;
+
+                    if (vizRecConnector && USE_VIZREC)
+                        vizRecConnector.current_mappings = selectedMapping;
+
+                    try {
+                        switch(VISPANEL.chartName){		// chartName is assigned in internal.getSelectedMapping() 
+                            case "timeline" : timeVis.draw(data, selectedMapping, width, height); break;
+                            case "barchart":  barVis.draw(data, selectedMapping, width, height); break;
+                            case "geochart":  geoVis.draw(data, selectedMapping, width, height); break;
+                            case "urank":  urankVis.draw(data, selectedMapping, width, height); break;
+                            case "landscape":  landscapeVis.draw(data, selectedMapping, width, height); break;
+                            default : d3.select(root).text("No Visualization");	
+                        }
+                        LIST.setColorIcon();
+                        LIST.highlightListItems();
+                    } catch (error) {
+                        //console.log("Catched an error in drawChart", error);
+                        if (error instanceof ReferenceError || error instanceof TypeError) {
+                            draw_timeout = 1000;
+                            console.log("Retrying to draw after "+ draw_timeout + " ms: " + VISPANEL.chartName, error);
+                            async_draw_fct();
+                            return;
+                        }
+                    }
+                }
+            }.bind(this),draw_timeout); 
+		}.bind(this);
+        
+        
+        async_draw_fct();
 	};
 	
 	

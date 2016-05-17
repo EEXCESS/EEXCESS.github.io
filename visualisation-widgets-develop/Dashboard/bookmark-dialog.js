@@ -23,12 +23,20 @@ var BOOKMARKDIALOG = {
             jQuery('<div />', {
                 id: 'share-collection-link',
                 text: ''
-            }).append(jQuery('<span />'), jQuery('<a />', {
+            }).append(jQuery('<span />'), 
+            jQuery('<a />', {
                 id: 'share-collection-close-button',
                 href : "#",
                 title: "Close",
                 text : 'x'
-            })),
+            }),
+            jQuery('<a />', {
+                id : 'share-collection-copy-button',
+                href : "#",
+                title: "Copy link to clipboard",
+                text : ""
+            })
+            ),
             jQuery('<span />', {
                 id: 'bookmarklist-label',
                 text: 'Showing:'
@@ -870,7 +878,8 @@ var BOOKMARKDIALOG = {
                 var filters = null;
                 //if (save_filters)
                 // Definition 29.04.16 --> Save filters everytime
-                filters = FilterHandler.filters;
+                if (typeof FilterHandler !== "undefined")
+                    filters = FilterHandler.filters;
 
                 //console.log("CREATE BOOKMARK: ", bookmark);
                 //var bookmark = BOOKMARKS.internal.getCurrentBookmark();

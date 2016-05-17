@@ -2,32 +2,51 @@
 
 var EEXCESS = EEXCESS || {};
 
+
+
+
 var globals = {
     origin: {clientType: '', clientVersion: '', userID: '', module: 'RecDashboard'}
 };
+
+
+
 var visTemplate = new Visualization(EEXCESS);
-visTemplate.init();
+
+var collaborative_bm_collection_id = CollaborativeBookmarkingAPI.getGetId();
+
+if (collaborative_bm_collection_id)
+    VizRecConnector.block();
+
+var vizRecConnector = null;
+if (typeof USE_VIZREC !== "undefined" && USE_VIZREC === true) {
+    vizRecConnector = new VizRecConnector();
+    //visTemplate.init();
+}
+else    // Only call init() on common start. With VizRec it gets called after its results arrived
+    visTemplate.init();
 var STARTER = {};
 
 var onDataReceived = function (dataReceived, status) {
-    
+    //console.log("ONDATA RECEIVED", dataReceived, status);
     visTemplate.clearCanvasAndShowLoading();
 
     if (status == "no data available") {
         visTemplate.refresh();
         return;
     }
-
+    
     globals["mappingcombination"] = getMappings();//dataReceived[0].mapping;
     globals["query"] = dataReceived.query;
     globals["profile"] = dataReceived.profile; // eg: profile.contextKeywords
     globals["queryID"] = dataReceived.queryID;
     globals["charts"] = getCharts(globals.mappingcombination);
     globals["data"] = dataReceived.result;
-
+    
     if (determineDataFormatVersion(dataReceived.result) == "v2") {
         STARTER.loadEexcessDetails(dataReceived.result, dataReceived.queryID, function (mergedData) {
             globals["data"] = STARTER.mapRecommenderV2toV1(mergedData);
+            //console.log("MAPPED GLOBAL DATA: " + globals.data);
             STARTER.sanitizeFacetValues(globals["data"]);
             saveReceivedData(dataReceived);
             STARTER.extractAndMergeKeywords(globals["data"]);
@@ -75,8 +94,7 @@ function requestPlugin() {
             onDataReceived(dummy.data.data, "No data received. Using dummy data");
 
             //onDataReceived([], "no data available");
-        }
-        else {
+        } else {
             onDataReceived(deletedRdf(pluginResponse), "Data requested successfully");
             /*      CALL TO EEXCESS/Belgin SERVER
              var dataToSend = deletedRdf(pluginResponse);
@@ -100,19 +118,65 @@ function requestPlugin() {
              */
         }
     };
-
-
+    
+    // Used for VizRec. If visTemplate is not initialized yet, but 
+    var cached_data_before_init = null;
+    
     window.onmessage = function (e) {
         if (e.data.event) {
             if (e.data.event === 'eexcess.newResults') {
+           
                 if (globals.queryID && e.data.data.queryID == globals.queryID) {
                     console.log('Same query results received ...');
                     return;
                 }
                 //showResults(e.data.data);
                 console.log('New data received ...');
-                requestVisualization(e.data.data);
+                
+                if (CollaborativeBookmarkingAPI.new_data_behavior == CollaborativeBookmarkingAPI.NEW_RESULT_HANDLE_OPTIONS.ASK) {
+                    CollaborativeBookmarkingAPI.showNewDataOverwriteConfirmDialog();
+                }
+                
+                if (CollaborativeBookmarkingAPI.new_data_behavior == CollaborativeBookmarkingAPI.NEW_RESULT_HANDLE_OPTIONS.BLOCK) {
+                    console.log("New results blocked due to Collaborative-Bookmarking-confirm");
+                    return;
+                }
+                
+                if (vizRecConnector) {
+                    vizRecConnector.setQuery(e.data.data.queryID);
+                    vizRecConnector.loadMappingsAndChangeVis(e.data.data);
+                }
+                
+                if (visTemplate.is_initialized){     //Due to VizRec init() may be called later
+                    requestVisualization(e.data.data);
+                    cached_data_before_init = e.data.data;
+                }
+                else                                // If not initialized, we save data in a variable
+                   cached_data_before_init = e.data.data;
             } else if (e.data.event === 'eexcess.queryTriggered') {
+                
+            } 
+             else if (e.data.event === 'eexcess.initVisTemplate') {
+                
+                
+                if (cached_data_before_init) {
+                 // console.log("data type before init Vis Template", determineDataFormatVersion(cached_data_before_init.result));
+                 if (determineDataFormatVersion(cached_data_before_init.result) === "v2")
+                     cached_data_before_init.result = STARTER.mapRecommenderV2toV1(cached_data_before_init.result);
+                }
+
+                /*
+                 * This event is used by the VizRec.
+                 * Initialization after data from VizRec-Server arrived
+                 */
+                
+                if (!visTemplate.is_initialized)
+                    visTemplate.init();                         
+                // Use the cached data from the newResults event before
+                requestVisualization(cached_data_before_init);
+                visTemplate.refresh(globals);
+                cached_data_before_init = null;
+                CollaborativeBookmarkingAPI.registerClickEvents();
 
             } else if (e.data.event === 'eexcess.error') {
                 //_showError(e.data.data);
@@ -124,6 +188,8 @@ function requestPlugin() {
                     $.extend(globals.origin, e.data.settings.origin);
                 }
             }
+            
+            
         }
     };
 
@@ -173,10 +239,10 @@ STARTER.sanitizeFacetValues = function (data) {
         if (oldYear == 'unknown' || oldYear == 'unkown')
             dataItem.facets["year"] = "unknown";
         //console.log('datumsumwandlung: ' + oldYear + ' --> ' + dataItem.facets["year"]);
-        
+
         // Preven mixing up e.g "IMAGE" and "image"
         dataItem.facets['type'] = dataItem.facets["type"].toLowerCase();
-               
+
     }
 };
 
@@ -273,7 +339,7 @@ STARTER.mapRecommenderV2toV1 = function (v2data) {
 
     var v1data = [];
     for (var i = 0; i < v2data.length; i++) {
-        
+
         var v2DataItem = v2data[i];
         // Moved code for converting a single element from V2 to V1
         var v1DataItem = BOOKMARKDIALOG.Tools.mapItemFromV2toV1(v2DataItem);
@@ -297,7 +363,7 @@ STARTER.loadEexcessDetails = function (data, queryId, callback) {
 
     //var detailCallBadges = underscore.map(data, 'documentBadge'); // trying to get rid of the "_" is not defined bug...
     var detailCallBadges = [];
-    for (var i=0; i<data.length; i++){
+    for (var i = 0; i < data.length; i++) {
         detailCallBadges.push(data[i].documentBadge);
     }
 
@@ -328,15 +394,17 @@ STARTER.loadEexcessDetails = function (data, queryId, callback) {
         }
     });
 };
- 
-STARTER.mergeOverviewAndDetailData = function(detailData, data){
+
+STARTER.mergeOverviewAndDetailData = function (detailData, data) {
     //console.log("Data / Detail Data:");
     //console.log(data);
     //console.log(detailData);
-    for (var i=0; i<detailData.documentBadge.length; i++){
+    for (var i = 0; i < detailData.documentBadge.length; i++) {
         var detailDataItem = detailData.documentBadge[i];
         //var details = JSON.parse(detailDataItem.detail);
-        var originalItem = underscore.find(data, function(dataItem){ return dataItem.documentBadge.id == detailDataItem.id; });
+        var originalItem = underscore.find(data, function (dataItem) {
+            return dataItem.documentBadge.id == detailDataItem.id;
+        });
         originalItem.details = detailDataItem.detail;
     }
 
@@ -517,7 +585,7 @@ STARTER.extractAndMergeKeywords = function (data) {
         keywordExtractor.processCollection();
     } catch (error) {
         console.error("keyword extraction had an error.");
-    }    
+    }
 
     data.forEach(function (d, i) {
         d.keywords = keywordExtractor.listDocumentKeywords(i);
@@ -530,3 +598,7 @@ STARTER.extractAndMergeKeywords = function (data) {
 
 
 
+if (collaborative_bm_collection_id !== false) {
+    CollaborativeBookmarkingAPI.loadCollection(collaborative_bm_collection_id, onDataReceived);
+}
+CollaborativeBookmarkingAPI.registerClickEvents();
