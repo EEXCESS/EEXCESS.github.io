@@ -75,9 +75,9 @@ IQHN.Scene.prototype.render = function () {
 
 
     for (var i = 0; i < this.collections_.length; i++) {
-        this.collections_[i].render();
+        this.collections_[i].preRender();
     }
-    this.webgl_handler_.render();
+    this.webgl_handler_.preRender();
 
 
     this.animation_.animate();

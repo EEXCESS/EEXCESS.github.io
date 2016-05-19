@@ -21,7 +21,7 @@ if (collaborative_bm_collection_id)
 var vizRecConnector = null;
 if (typeof USE_VIZREC !== "undefined" && USE_VIZREC === true) {
     vizRecConnector = new VizRecConnector();
-    //visTemplate.init();
+    visTemplate.init();
 }
 else    // Only call init() on common start. With VizRec it gets called after its results arrived
     visTemplate.init();
@@ -42,10 +42,11 @@ var onDataReceived = function (dataReceived, status) {
     globals["queryID"] = dataReceived.queryID;
     globals["charts"] = getCharts(globals.mappingcombination);
     globals["data"] = dataReceived.result;
-
+    
     if (determineDataFormatVersion(dataReceived.result) == "v2") {
         STARTER.loadEexcessDetails(dataReceived.result, dataReceived.queryID, function (mergedData) {
             globals["data"] = STARTER.mapRecommenderV2toV1(mergedData);
+            //console.log("MAPPED GLOBAL DATA: " + globals.data);
             STARTER.sanitizeFacetValues(globals["data"]);
             saveReceivedData(dataReceived);
             STARTER.extractAndMergeKeywords(globals["data"]);
@@ -146,19 +147,31 @@ function requestPlugin() {
                     vizRecConnector.loadMappingsAndChangeVis(e.data.data);
                 }
                 
-                if (visTemplate.is_initialized)     //Due to VizRec init() may be called later
+                if (visTemplate.is_initialized){     //Due to VizRec init() may be called later
                     requestVisualization(e.data.data);
+                    cached_data_before_init = e.data.data;
+                }
                 else                                // If not initialized, we save data in a variable
                    cached_data_before_init = e.data.data;
             } else if (e.data.event === 'eexcess.queryTriggered') {
                 
             } 
              else if (e.data.event === 'eexcess.initVisTemplate') {
+                
+                
+                if (cached_data_before_init) {
+                 // console.log("data type before init Vis Template", determineDataFormatVersion(cached_data_before_init.result));
+                 if (determineDataFormatVersion(cached_data_before_init.result) === "v2")
+                     cached_data_before_init.result = STARTER.mapRecommenderV2toV1(cached_data_before_init.result);
+                }
+
                 /*
                  * This event is used by the VizRec.
                  * Initialization after data from VizRec-Server arrived
                  */
-                visTemplate.init();           
+                
+                if (!visTemplate.is_initialized)
+                    visTemplate.init();                         
                 // Use the cached data from the newResults event before
                 requestVisualization(cached_data_before_init);
                 visTemplate.refresh(globals);
@@ -175,6 +188,8 @@ function requestPlugin() {
                     $.extend(globals.origin, e.data.settings.origin);
                 }
             }
+            
+            
         }
     };
 
