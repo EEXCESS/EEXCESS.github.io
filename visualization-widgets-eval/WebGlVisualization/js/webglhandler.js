@@ -33,9 +33,6 @@ IQHN.WebGlHandler = function (canvas) {
     //this.three_.scene.add(axes);
 
     this.createRenderer();
-
-    this.screenshot_img = null;
-    this.take_screenshot_now = false;
 };
 
 /**
@@ -46,11 +43,11 @@ IQHN.WebGlHandler.prototype.createPerspectiveCamera_ = function () {
     var scene_width = this.canvas_.width();
     var scene_height = this.canvas_.height();
     var camera = new THREE.PerspectiveCamera(
-        this.cameraconfig_.FOV,
-        scene_width / scene_height,
-        this.cameraconfig_.NEAR,
-        this.cameraconfig_.FAR
-        );
+            this.cameraconfig_.FOV,
+            scene_width / scene_height,
+            this.cameraconfig_.NEAR,
+            this.cameraconfig_.FAR
+            );
     camera.position.z = 0 + this.cameraconfig_.DISTANCE;
     camera.lookAt(new THREE.Vector3(0, 0, 0));
 
@@ -72,14 +69,14 @@ IQHN.WebGlHandler.prototype.createOrthoCamera_ = function () {
     var aspect = scene_width / scene_height;
 
     var camera =
-        new THREE.OrthographicCamera(
-            scene_width / -2,
-            scene_width / 2,
-            scene_height / -2,
-            scene_height / 2,
-            this.cameraconfig_.NEAR,
-            this.cameraconfig_.FAR
-            );
+            new THREE.OrthographicCamera(
+                    scene_width / -2,
+                    scene_width / 2,
+                    scene_height / -2,
+                    scene_height / 2,
+                    this.cameraconfig_.NEAR,
+                    this.cameraconfig_.FAR
+                    );
     this.three_.camera = camera;
 };
 
@@ -107,11 +104,6 @@ IQHN.WebGlHandler.prototype.createRenderer = function () {
  */
 IQHN.WebGlHandler.prototype.render = function () {
     this.three_.renderer.render(this.three_.scene, this.three_.camera);
-    
-    if (this.take_screenshot_now === true) {
-        this.screenshot_img.src = this.three_.renderer.domElement.toDataURL();
-        this.take_screenshot_now = false;
-    }
 };
 
 /**
@@ -150,18 +142,18 @@ IQHN.WebGlHandler.prototype.getCanvas = function () {
 
 IQHN.WebGlHandler.prototype.cleanup = function () {
 
-    /*
-     this.three_.scene.traverse(function (node) {
-     
-     if (node instanceof THREE.Mesh) {
-     node.scene_obj = undefined;
-     node.interaction = undefined;
-     
-     this.three_.scene.remove(node);
-     node = undefined;
-     }
-     }.bind(this));
-     */
+/*
+    this.three_.scene.traverse(function (node) {
+
+        if (node instanceof THREE.Mesh) {
+            node.scene_obj = undefined;
+            node.interaction = undefined;
+
+            this.three_.scene.remove(node);
+            node = undefined;
+        }
+    }.bind(this));
+*/
     this.three_.scene = undefined;
     this.three_.renderer = undefined;
     this.three_.camera = undefined;

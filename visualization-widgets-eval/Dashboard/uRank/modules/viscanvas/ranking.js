@@ -31,8 +31,7 @@ var Ranking = (function(){
             onItemMouseEnter: function(document){},
             onItemMouseLeave: function(document){},
             lightBackgroundColor: '',
-            darkBackgroundColor: '',
-            stopPropagation : true
+            darkBackgroundColor: ''
         }, arguments);
 
         this.isRankingDrawn = false;
@@ -92,14 +91,12 @@ var Ranking = (function(){
     };
 
     RANKING.Evt.itemMouseEntered = function(d, i){
-		if(s.stopPropagation)
-        	d3.event.stopPropagation();
+        d3.event.stopPropagation();
         s.onItemMouseEnter.call(this, d.id);
     };
 
     RANKING.Evt.itemMouseLeft = function(d, i){
-		if(s.stopPropagation)
-        	d3.event.stopPropagation();
+        d3.event.stopPropagation();
         s.onItemMouseLeave.call(this, d.id);
     };
 

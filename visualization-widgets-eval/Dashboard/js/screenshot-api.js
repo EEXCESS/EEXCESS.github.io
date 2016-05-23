@@ -1,5 +1,3 @@
-
-
 var SS = SS || {};
 SS.Screenshot = function () {
 
@@ -14,11 +12,9 @@ SS.Screenshot = function () {
     this.createIndicator();
     this.createBindings();
 
-
     this.eval_session = this.getEvalSession();
 
     this.counter = 0;
-
 
 };
 
@@ -26,7 +22,7 @@ SS.Screenshot.prototype.getEvalSession = function () {
     var params = window.parent.location.search;
 
     if (!params.length) {
-        console.warn("Session-Number not set (Get-param 'session'). Assuming 1");
+        alert("Session-Number not set (Get-param 'session'). Assuming 1");
         return 1;
     }
     var expr = /session=(\d*)/;
@@ -35,7 +31,7 @@ SS.Screenshot.prototype.getEvalSession = function () {
     var session = RegExp.$1;
 
     if (session === "") {
-        console.warn("Could not get session from GET variable 'session'. Assuming 1");
+        alert("Could not get session from GET variable 'session'. Assuming 1");
         return 1;
     }
     return parseInt(session);
@@ -62,27 +58,18 @@ SS.Screenshot.prototype.createBindings = function () {
     jQuery(document).ready(function () {
         jQuery('.filter-keep').click(function (e) {
             var filterelement = jQuery(this).parent().parent().parent();
-            var title = filterelement.find("h4").html();
+            var title = filterelement.find("h4").html()+'-filter';
             window.setTimeout(function () {
                 console.log(filterelement.attr("id"));
                 that.screenshot(title, "#" + filterelement.attr("id"), 4);
-            }, 500);
-
+            }, 0);
         });
-
 
         /**
          * Further bindings here
          */
-
     });
-
-
-
-
 };
-
-
 
 SS.Screenshot.prototype.createDemoButton = function () {
     jQuery(document).ready(function () {
@@ -93,18 +80,17 @@ SS.Screenshot.prototype.createDemoButton = function () {
         this.status_indicator.css("font-size", "20px");
         this.status_indicator.css("font-weight", "bold");
 
-
-
         //jQuery('body').append(jQuery("<canvas id='my-canvas'></canvas>"));
         jQuery('.screenshot_button').click(function () {
             this.screenshot("mapleg", "#div-wrap-legends");
         }.bind(this));
     }.bind(this));
 };
+
 SS.Screenshot.prototype.screenshot = function (title, selector, margin) {
 
+    console.log('starting with screenshot: ' + title + '; selector: ' + selector);
     this.status_indicator.css("background", "orange");
-
     var user_id = localStorageCustom.getItem("userID");
 
     if (!title) {
@@ -116,8 +102,6 @@ SS.Screenshot.prototype.screenshot = function (title, selector, margin) {
             title = "0" + title;
     }
 
-
-
     var clipping = {
         l: 0,
         t: 0,
@@ -127,11 +111,9 @@ SS.Screenshot.prototype.screenshot = function (title, selector, margin) {
 
     if (selector)
         var clipping_data = this.getClipping(selector, margin);
+        
     if (clipping_data)
         clipping = clipping_data;
-
-
-    console.log(clipping);
 
     var data = {
         url: window.parent.parent.location.href, // To get the uppermost parent
@@ -202,24 +184,29 @@ SS.Screenshot.prototype.manipulateDom = function (dom) {
      * Append those css files due to false relative path in iframe
      */
 
-    var my_server = window.location.origin;
+    var my_server = window.location.href;
+    var expr = /(https?:\/\/.*\/Dashboard\/)index.html/;
+    expr.exec(my_server);
+    var dashboard_url = RegExp.$1;
+
     var missing_css = [
-        my_server + "/Dashboard/libs/jquery-ui/jquery-ui.css",
-        my_server + "/Dashboard/libs/jquery-dropdown/jquery.dropdown.min.css",
-        my_server + "/Dashboard/libs/leaflet/leaflet.css",
-        my_server + "/Dashboard/libs/leaflet/markercluster/MarkerCluster.Default.css",
-        my_server + "/Dashboard/libs/leaflet/markercluster/MarkerCluster.css",
-        my_server + "/Dashboard/libs/leaflet/leaflet.draw/leaflet.draw.css",
-        my_server + "/Dashboard/Geochart/geochart.css",
-        my_server + "/Dashboard/media/css/vis-template-style-.css",
-        my_server + "/Dashboard/uRankAdaption/uRankAdaption.css",
-        my_server + "/Dashboard/uRank/modules/tagcloud/landscape/css/landscape.css",
-        my_server + "/Dashboard/Plugins/pictures_slider/style.css",
-        my_server + "/Dashboard/Plugins/popup_slider/popup_slider.css",
-        my_server + "/Dashboard/media/css/eexcess.css",
-        my_server + "/Dashboard/media/css/vis-template-chart-style-cecilia.css",
-        my_server + "/Dashboard/libs/introjs.min.css"
+        dashboard_url + "libs/jquery-ui/jquery-ui.css",
+        dashboard_url + "libs/jquery-dropdown/jquery.dropdown.min.css",
+        dashboard_url + "libs/leaflet/leaflet.css",
+        dashboard_url + "libs/leaflet/markercluster/MarkerCluster.Default.css",
+        dashboard_url + "libs/leaflet/markercluster/MarkerCluster.css",
+        dashboard_url + "libs/leaflet/leaflet.draw/leaflet.draw.css",
+        dashboard_url + "Geochart/geochart.css",
+        dashboard_url + "media/css/vis-template-style-.css",
+        dashboard_url + "uRankAdaption/uRankAdaption.css",
+        dashboard_url + "uRank/modules/tagcloud/landscape/css/landscape.css",
+        dashboard_url + "Plugins/pictures_slider/style.css",
+        dashboard_url + "Plugins/popup_slider/popup_slider.css",
+        dashboard_url + "media/css/eexcess.css",
+        dashboard_url + "media/css/vis-template-chart-style-cecilia.css",
+        dashboard_url + "libs/introjs.min.css"
     ];
+    //console.log(missing_css);
     for (var css_key in missing_css) {
         head.append("<link rel='stylesheet' href='" + missing_css[css_key] + "' type='text/css' />");
     }
@@ -259,27 +246,22 @@ SS.Screenshot.prototype.manipulateDom = function (dom) {
         });
     }
 
-
     /*
      * Replacec landscape SVG-Stuff with IMG
      */
     if (dom.find('#eexcess_landscape_vis_main svg').length)
         this.replaceSvgWithPng(dom.find('#eexcess_landscape_vis_main svg'));
 
-    if (dom.find('#webgl_canvas_container canvas').length) {
+    if (dom.find('#webgl_canvas_container canvas').length)
         this.replaceWebGLCanvasWithPng(dom.find('#webgl_canvas_container canvas'));
-
-
-    }
+    
     /*
      * Other stuff
      */
     dom.find('#div-wrap-legends').css("z-index", "100");
-
     dom.find('#eexcess_vis_panel_controls').css("float", "left");
     dom.find('#eexcess_vis_panel_controls').css("width", "100%");
     dom.find('.urank #eexcess_keywords_box').css("width", "100%");
-
 
     var widths_to_make_static = [
         '#eexcess_vis_panel',
@@ -340,7 +322,6 @@ SS.Screenshot.prototype.on_data = function (data) {
         data = data.responseText;
 
     console.log("RESPONSE FROM PHANTOM.JS SERVER!", data);
-
 
     if (data.status === "OK") {
         this.status_indicator.stop(true, true).css("background", "green");
