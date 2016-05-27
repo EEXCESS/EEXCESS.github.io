@@ -115,7 +115,7 @@
 						
 						var textualFilterMode = eval_server_data.textualFilterMode;
 						if (userNamePrefix){
-							var prefixAsChars = userNamePrefix.splig('');
+							var prefixAsChars = userNamePrefix.split('');
 							if (prefixAsChars.length >= session){
 								if (prefixAsChars[session-1] == "V")
 									textualFilterMode = 'textAndViz';
