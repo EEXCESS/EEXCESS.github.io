@@ -57,8 +57,13 @@
 
 
                 var onGettingEvalData = function (eval_server_data) {
-
+					
                     var userName = eval_server_data.user;
+					var parts = userName.split('_');
+					var userNamePrefix = undefined;
+					if (parts.length > 0)
+						userNamePrefix = parts[0];
+						
 					userID = userName;
                     localStorageCustom.setItem('userID', userID);
                     console.log("Hello evaluation-user '" + userID + "'!");
@@ -96,6 +101,28 @@
                     // Load Demo Data, right after the Dashboard-IFRAME has finished loading 
                     $('#dashboard').on('load', function () {
 
+						// Data to load:
+                        var session = getSessionFromParam();
+                        var demoData = demoDataHistoricalBuildings;
+                        var queryID = "123HistoricalBuilding";
+                        var text = "Historical Buildings";
+                        if (session == 2){
+                            demoData = demoDataUniversity;
+                            queryID = "123University";
+                            text = "University Campus";
+                        }
+						// Todo: session 3
+						
+						var textualFilterMode = eval_server_data.textualFilterMode;
+						if (userNamePrefix){
+							var prefixAsChars = userNamePrefix.splig('');
+							if (prefixAsChars.length >= session){
+								if (prefixAsChars[session-1] == "V")
+									textualFilterMode = 'textAndViz';
+								if (prefixAsChars[session-1] == "T")
+									textualFilterMode = 'textOnly';
+							}
+						}
                         // send Settings to Dashboard:
                         iframes.sendMsgAll({event: 'eexcess.newDashboardSettings', settings: {
                                 selectedChart: 'geochart',
@@ -107,16 +134,6 @@
                                 origin: origin,
                                 textualFilterMode: eval_server_data.textualFilterMode
                             }});
-
-                        var session = getSessionFromParam();
-                        var demoData = demoDataHistoricalBuildings;
-                        var queryID = "123HistoricalBuilding";
-                        var text = "Historical Buildings";
-                        if (session == 2){
-                            demoData = demoDataUniversity;
-                            queryID = "123University";
-                            text = "University Campus";
-                        }
 
                         iframes.sendMsgAll({event: 'eexcess.newResults', data: {
                                 result: demoData,
