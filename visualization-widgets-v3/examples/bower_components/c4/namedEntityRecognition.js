@@ -31,7 +31,7 @@ define(['jquery'], function($) {
                 type: 'POST',
                 contentType: 'application/json',
                 dataType: 'json',
-                timeout:10000
+                timeout:5000
             });
             xhr.done(function(response) {
                 if (typeof callback !== 'undefined') {

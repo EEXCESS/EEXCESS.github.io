@@ -67,9 +67,7 @@ var Urank = (function(){
                     liDarkBackgroundClass: ''
                 },
                 misc: {
-                    hideScrollbar: false, 
-                    hideUrankedItems : true,
-                    stopPropagation : true
+                    hideScrollbar: false
                 }
             },
         },
@@ -77,11 +75,10 @@ var Urank = (function(){
             module: 'ranking',
             customOptions: {               // use only if contentList.custom = true and background in the ranking should match different light and dark background colors
                 lightBackgroundColor: '',
-                darkBackgroundColor: '',
-                stopPropagation : true
+                darkBackgroundColor: ''
             },
             misc: {
-                hideScrollbar: true,             
+                hideScrollbar: true
             }
         },
         tagBox: {
@@ -155,16 +152,13 @@ var Urank = (function(){
 	            _this.data.forEach(function(d, i){
 	                d.keywords = keywordExtractor.listDocumentKeywords(i);
 	            });
-	            o.keywordExtractor.extractedData.keywords = keywordExtractor.getCollectionKeywords();
-	        	o.keywordExtractor.extractedData.keywordsDict = keywordExtractor.getCollectionKeywordsDictionary();
-	        }
-	        else {
-	        	 o.keywordExtractor = options.keywordExtractor; 
+	            o.keywordExtractor.keywords = keywordExtractor.getCollectionKeywords();
+	        	o.keywordExtractor.keywordsDict = keywordExtractor.getCollectionKeywordsDictionary();
 	        }
 
             //  Assign collection keywords and set other necessary variables
-            _this.keywords =  o.keywordExtractor.extractedData.keywords; 
-            _this.keywordsDict = o.keywordExtractor.extractedData.keywordsDict; 
+            _this.keywords =  o.keywordExtractor.keywords; 
+            _this.keywordsDict = o.keywordExtractor.keywordsDict; 
             _this.rankingMode = RANKING_MODE.overall_score;
             _this.rankingModel.clear().setData(_this.data);
             _this.selectedKeywords = [];

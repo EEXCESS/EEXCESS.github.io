@@ -585,11 +585,7 @@ IQHN.NavigationHandler.prototype.focusRecommendation = function (rec) {
             );
 };
 IQHN.NavigationHandler.prototype.onMouseWheelMove = function (e, intersected_objects) {
-
-    var is_positive = null;
-    if (e.deltaY === undefined)
-        e.deltaY = e.detail; // FireFox (DOMMouseScroll event)
-    is_positive = e.deltaY < 0 ? false : true;
+    var is_positive = e.deltaY < 0 ? true : false;
 
     for (var i = 0; i < intersected_objects.length; i++) {
         if (intersected_objects[i].object && intersected_objects[i].object.scene_obj) {
@@ -664,7 +660,3 @@ IQHN.NavigationHandler.prototype.getPosZ = function () {
     return IQHN.Scene.getCurrentScene().getWebGlHandler().getCamera().position.z;
 };
 
-
-IQHN.NavigationHandler.prototype.cleanup = function(){
-    this.scene_ = null;
-};

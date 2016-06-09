@@ -6,8 +6,7 @@ IQHN.CollectionPosCircularTypeBow = function () {
 
 
 IQHN.CollectionPosCircularTypeBow.prototype.getAddEmptySpaces = function (orig_num) {
-    var coll_dist_degree = IQHN.config.scene.coll_distance_degree || 1;
-    return (360 / coll_dist_degree) - parseInt(orig_num);
+    return parseInt(orig_num * IQHN.config.scene.bow_empty_spaces_factor);
 };
 
 

@@ -201,7 +201,7 @@ IQHN.Scene.prototype.getVisType = function () {
 /**
  * 
  * @param {integer} collection_id
- * @returns {IQHN.Collection || null}
+ * @returns {GLIVS.Collection || null}
  */
 IQHN.Scene.prototype.getCollection = function (collection_id) {
 
@@ -229,25 +229,7 @@ IQHN.Scene.prototype.initCollectionNetwork = function () {
 };
 
 
-/**
- * Responsible for cleaning up before deleting the scene
- */
-IQHN.Scene.prototype.cleanup = function(){
-   
-    window.cancelAnimationFrame(IQHN.Scene.requ_anim_id);
-    
-    this.webgl_handler_.cleanup();
-    this.interaction_handler_.cleanup();
-    this.navigation_handler_.cleanup();
-    delete this.interaction_handler_;
-    delete this.navigation_handler_;
-   
-    
-    for (var i=0; i< this.getCollections().length; i++) {
-        this.getCollections()[i].cleanup();
-    }
-    
-};
+
 
 
 /******************
@@ -279,7 +261,7 @@ IQHN.Scene.getCurrentScene = function () {
 var stop_flag = false;
 
 var animation_debugger = null;
-// animation_debugger = new IQHN.AnimationDebugger();
+animation_debugger = new IQHN.AnimationDebugger();
 
 /**
  * Main entry-point for the animation
@@ -291,7 +273,7 @@ IQHN.Scene.animate = function () {
         return;
 
 
-    IQHN.Scene.requ_anim_id = window.requestAnimationFrame(IQHN.Scene.animate);
+    requestAnimationFrame(IQHN.Scene.animate);
     curr_scene.render();
 
     if (animation_debugger)
