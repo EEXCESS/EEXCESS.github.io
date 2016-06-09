@@ -1583,8 +1583,8 @@ function Visualization( EEXCESSobj ) {
 	 * 
 	 * */
 	var chartChangedCounter = 0;
-	VISPANEL.drawChart = function( item ){
-        
+	VISPANEL.drawChart = function (item) {
+
         /*
          * Encapsulating the draw-functionality to prevent time-specific loading errors
          * The draw is called asynchronously afte 0ms.
@@ -1592,95 +1592,94 @@ function Visualization( EEXCESSobj ) {
          * Unless a limit of re-calls get reached, it gets repeated until no loading-error occurs.
          * P.H. 09.05.16
          */
-        
+
         var draw_timeout = 0;
         var max_tries = 10;
         var curr_tries = 0;
-        var async_draw_fct = function(){
-            window.setTimeout(function(){
-                
-                curr_tries ++;
+		var hasChartChanged = false;
+        var async_draw_fct = function () {
+            window.setTimeout(function () {
+
+                curr_tries++;
                 if (curr_tries > max_tries) {
-                    console.error("Too much retries ("+max_tries+") in drawChart-Function");
+                    console.error("Too much retries (" + max_tries + ") in drawChart-Function");
                     return;
                 }
-                    
+
                 //console.log("Async part of drawchart called");
-		if ($(root).width() == 0) // workaround: problem, at the beginning, all visualisations get initialized too soon and too often.
-			return; 
-		
-		$(root).empty();		
-        // cleanup added controls:
-        $('#eexcess_vis_panel').children().not('#eexcess_canvas').remove()
-        $('#eexcess_main_panel').removeClass('urank'); // removing urank class
-		$('.urank-hidden-scrollbar-inner ul').unwrap();
-		$('.urank-hidden-scrollbar').removeClass('urank-hidden-scrollbar');
-		LIST.buildContentList();
+				if ($(root).width() == 0) // workaround: problem, at the beginning, all visualisations get initialized too soon and too often.
+					return;
 
-		var oldChartName = VISPANEL.chartName;
-		var hasChartChanged = false;
-		var selectedMapping = this.internal.getSelectedMapping( item );
-		if (oldChartName != VISPANEL.chartName){
-            LoggingHandler.log({action: "Chart changed", old: oldChartName, new: VISPANEL.chartName});
-			VISPANEL.chartChanged(oldChartName, VISPANEL.chartName);
-			hasChartChanged = true;
-		}
-        selectedChartName = VISPANEL.chartName;
-			
-		$('#screenshot').removeClass('notAvailable');
-		if (VISPANEL.chartName == 'geochart' || VISPANEL.chartName == 'uRank' || VISPANEL.chartName == 'landscape')
-			$('#screenshot').addClass('notAvailable');
+				$(root).empty();
+				// cleanup added controls:
+				$('#eexcess_vis_panel').children().not('#eexcess_canvas').remove()
+				$('#eexcess_main_panel').removeClass('urank'); // removing urank class
+				$('.urank-hidden-scrollbar-inner ul').unwrap();
+				$('.urank-hidden-scrollbar').removeClass('urank-hidden-scrollbar');
+				LIST.buildContentList();
 
-		var plugin = PluginHandler.getByDisplayName(VISPANEL.chartName);
-		if (plugin != null){
-                    if (plugin.Object.draw != undefined) {
-				plugin.Object.draw(data, selectedMapping, width, height);		
-                        LIST.setColorIcon();
-                        LIST.highlightListItems();
-                    }
-		} else {
-                    
-                    selectedMapping = !item && vizRecConnector && USE_VIZREC &&
-                        vizRecConnector.getMapping(VISPANEL.chartName) !== false ? 
-                        vizRecConnector.getMapping(VISPANEL.chartName) :
-                        selectedMapping;
+				var oldChartName = VISPANEL.chartName;
+				var selectedMapping = this.internal.getSelectedMapping(item);
+				if (oldChartName != VISPANEL.chartName) {
+					LoggingHandler.log({ action: "Chart changed", old: oldChartName, new: VISPANEL.chartName });
+					VISPANEL.chartChanged(oldChartName, VISPANEL.chartName);
+					hasChartChanged = true;
+				}
+				selectedChartName = VISPANEL.chartName;
 
-                    if (vizRecConnector && USE_VIZREC)
-                        vizRecConnector.current_mappings = selectedMapping;
+				$('#screenshot').removeClass('notAvailable');
+				if (VISPANEL.chartName == 'geochart' || VISPANEL.chartName == 'uRank' || VISPANEL.chartName == 'landscape')
+					$('#screenshot').addClass('notAvailable');
 
-                    try {
-			switch(VISPANEL.chartName){		// chartName is assigned in internal.getSelectedMapping() 
-				case "timeline" : timeVis.draw(data, selectedMapping, width, height); break;
-				case "barchart":  barVis.draw(data, selectedMapping, width, height); break;
-	            case "geochart":  geoVis.draw(data, selectedMapping, width, height); break;
-                case "urank":  urankVis.draw(data, selectedMapping, width, height); break;
-                case "landscape":  landscapeVis.draw(data, selectedMapping, width, height); break;
-				default : d3.select(root).text("No Visualization");	
-			}
-                        LIST.setColorIcon();
-                        LIST.highlightListItems();
-                    } catch (error) {
-                        //console.log("Catched an error in drawChart", error);
-                        if (error instanceof ReferenceError || error instanceof TypeError) {
-                            draw_timeout = 1000;
-                            console.log("Retrying to draw after "+ draw_timeout + " ms: " + VISPANEL.chartName, error);
-                            async_draw_fct();
-                            return;
-		}
-                    }
-                }
-            }.bind(this),draw_timeout); 
+				var plugin = PluginHandler.getByDisplayName(VISPANEL.chartName);
+				if (plugin != null) {
+					if (plugin.Object.draw != undefined) {
+						plugin.Object.draw(data, selectedMapping, width, height);
+						LIST.setColorIcon();
+						LIST.highlightListItems();
+					}
+				} else {
+					selectedMapping = !item && vizRecConnector && USE_VIZREC &&
+						vizRecConnector.getMapping(VISPANEL.chartName) !== false ?
+						vizRecConnector.getMapping(VISPANEL.chartName) :
+						selectedMapping;
+
+					if (vizRecConnector && USE_VIZREC)
+						vizRecConnector.current_mappings = selectedMapping;
+
+					try {
+						switch (VISPANEL.chartName) {		// chartName is assigned in internal.getSelectedMapping() 
+							case "timeline": timeVis.draw(data, selectedMapping, width, height); break;
+							case "barchart": barVis.draw(data, selectedMapping, width, height); break;
+							case "geochart": geoVis.draw(data, selectedMapping, width, height); break;
+							case "urank": urankVis.draw(data, selectedMapping, width, height); break;
+							case "landscape": landscapeVis.draw(data, selectedMapping, width, height); break;
+							default: d3.select(root).text("No Visualization");
+						}
+						LIST.setColorIcon();
+						LIST.highlightListItems();
+					} catch (error) {
+						//console.log("Catched an error in drawChart", error);
+						if (error instanceof ReferenceError || error instanceof TypeError) {
+							draw_timeout = 1000;
+							console.log("Retrying to draw after " + draw_timeout + " ms: " + VISPANEL.chartName, error);
+							async_draw_fct();
+							return;
+						}
+					}
+				}
+			}.bind(this), draw_timeout);
 		}.bind(this);
 
-        
+
         async_draw_fct();
-		if (hasChartChanged || chartChangedCounter === 0){
+		if (hasChartChanged || chartChangedCounter === 0) {
 			chartChangedCounter++;
-			setTimeout(function(){ screenshot.screenshot('chartchanged'+chartChangedCounter, 'body', 0);  }, 300);
+			setTimeout(function () { screenshot.screenshot('chartchanged' + chartChangedCounter, 'body', 0); }, 300);
 			//setTimeout(function(){ alert(selectedChartName + '-' + chartChangedCounter);  }, 300);
 		}
 	};
-	
+
 	
 	VISPANEL.chartChanged = function(oldChartName, newChartName){
         FilterHandler.chartNameChanged(newChartName);
@@ -1817,14 +1816,14 @@ function Visualization( EEXCESSobj ) {
 	
 	/*
 	
-list: “This shows a list of all recommendation resuls”
-main chart: “This is the area, where the main visualisation is shown.”
-config buttons: “Configuring the application. Not important for your task.”
-bookmark dataset: “Bookmarks all items within selection, as well as the applied filters into a named collection”
-change charts buttons: “Switch between the available main - visualisations”
-filters: “When you brush something in the main visualisation, the brush gets shown immediadly as micro visualisation. You can then apply ”
-make filter permanent: “A brush in the main visualisation is only temporary. if you want to filter your results, you need click on this button.”
-remove filter: “Any filter that is shown here (if it is a temporary brush or a permanent filter) can be removed, by clicking on this icon”	
+list: ï¿½This shows a list of all recommendation resulsï¿½
+main chart: ï¿½This is the area, where the main visualisation is shown.ï¿½
+config buttons: ï¿½Configuring the application. Not important for your task.ï¿½
+bookmark dataset: ï¿½Bookmarks all items within selection, as well as the applied filters into a named collectionï¿½
+change charts buttons: ï¿½Switch between the available main - visualisationsï¿½
+filters: ï¿½When you brush something in the main visualisation, the brush gets shown immediadly as micro visualisation. You can then apply ï¿½
+make filter permanent: ï¿½A brush in the main visualisation is only temporary. if you want to filter your results, you need click on this button.ï¿½
+remove filter: ï¿½Any filter that is shown here (if it is a temporary brush or a permanent filter) can be removed, by clicking on this iconï¿½	
 	
 	 */
     
@@ -1919,12 +1918,12 @@ remove filter: “Any filter that is shown here (if it is a temporary brush or a p
 						},
 						{
 							element: $firstOpenedFilter.parent().find('.filter-keep')[0],
-							intro: '<strong>Make Filter Permanent:</strong><br>A selection is only temporary. To add it to a permanent filters click the “Lock” button. When a filter is set, the recommendations outside the filter range are removed.',
+							intro: '<strong>Make Filter Permanent:</strong><br>A selection is only temporary. To add it to a permanent filters click the ï¿½Lockï¿½ button. When a filter is set, the recommendations outside the filter range are removed.',
 							position: 'left'
 						},
 						{
 							element: $firstOpenedFilter.parent().find('.filter-remove')[0],
-							intro: '<strong>Remove Filter:</strong><br>Use the “Trashcan” button to remove a filter.<br><br><em>Thank you, for your attention.</em>',
+							intro: '<strong>Remove Filter:</strong><br>Use the ï¿½Trashcanï¿½ button to remove a filter.<br><br><em>Thank you, for your attention.</em>',
 							position: 'left'
 						},
 					]
