@@ -256,7 +256,7 @@ IQHN.Text.prototype.unHighlight = function () {
 /**
  * Rendering the Text object and its meshes
  */
-IQHN.Text.prototype.preRender = function () {
+IQHN.Text.prototype.render = function () {
 
     if (!this.dirty_) {
         return;

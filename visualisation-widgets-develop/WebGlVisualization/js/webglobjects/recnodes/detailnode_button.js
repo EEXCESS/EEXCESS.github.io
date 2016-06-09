@@ -44,7 +44,7 @@ IQHN.RecDetailNodeButton.prototype.hover = function () {
 
     if (this.webgl_objects_.label) {
         this.webgl_objects_.label.setIsVisible(true);
-        //this.webgl_objects_.label.preRender();
+        //this.webgl_objects_.label.render();
     }
     IQHN.RecDetailNodeButton.current_hovered = this;
     IQHN.RecDetailNodeButton.new_hovered = true;
@@ -63,7 +63,7 @@ IQHN.RecDetailNodeButton.prototype.unhover = function () {
 
     if (this.webgl_objects_.label) {
         this.webgl_objects_.label.setIsVisible(false);
-        this.webgl_objects_.label.preRender();
+        this.webgl_objects_.label.render();
     }
     this.setIsDirty(true);
 };
@@ -189,7 +189,7 @@ IQHN.RecDetailNodeButton.prototype.getIsDirty = function () {
  * The interactions are set here dynamically because they depend on the visibility
  * of the button
  */
-IQHN.RecDetailNodeButton.prototype.preRender = function () {
+IQHN.RecDetailNodeButton.prototype.render = function () {
 
     if (!this.dirty_)
         return;
@@ -234,7 +234,7 @@ IQHN.RecDetailNodeButton.prototype.preRender = function () {
         var y_offset = IQHN.config.collection.recommendation.detail_node.button.label.y_offset;
         //label.setIsVisible(this.visible_);
         label.setPosition(this.pos.x, this.pos.y + y_offset, this.pos.z + 0.001);
-        label.preRender();
+        label.render();
     }
 
     this.dirty_ = false;

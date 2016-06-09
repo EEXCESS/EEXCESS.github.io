@@ -93,7 +93,7 @@ IQHN.DirectCompareBar.prototype.initGlObjects = function () {
 
 };
 
-IQHN.DirectCompareBar.prototype.preRender = function () {
+IQHN.DirectCompareBar.prototype.render = function () {
 
     if (!this.dirty_)
         return;
@@ -123,7 +123,7 @@ IQHN.DirectCompareBar.prototype.preRender = function () {
             config.z_value
             );
 
-    this.label_.preRender();
+    this.label_.render();
     this.setIsDirty(false);
 };
 

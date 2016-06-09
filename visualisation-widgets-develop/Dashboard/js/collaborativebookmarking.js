@@ -1,191 +1,22 @@
+
 var CollaborativeBookmarkingAPI = {
     active: true,
-    server: "https://ext250.know-center.tugraz.at/dashboard/visualization-widgets/collaborativebookmarking/bookmarks.php",
-    get_key: "collection",
-    static_share_url: "http://eexcess.github.io/visualisation-widgets-develop/examples/index-dashboard.html"
+    server: "https://ext250.know-center.tugraz.at/dashboard/coll_bookmarking/collaborativebookmarking/bookmarks.php",
+    loaded_collections: {},
+    init_loaded: false
 };
 
-CollaborativeBookmarkingAPI.registerClickEvents = function () {
-    jQuery(document).ready(function () {
-        jQuery('#share-collection-button').click(function () {
-            CollaborativeBookmarkingAPI.storeCollection();
-        });
-
-        jQuery('#share-collection-close-button').click(function () {
-            jQuery('#share-collection-link').hide();
-        });
-
-        jQuery('#share-collection-copy-button').click(function () {
-            CollaborativeBookmarkingAPI.copyLink();
-        });
-    });
-};
-
-CollaborativeBookmarkingAPI.buildLink = function (id) {
+if (localStorageCustom.getItem("usecollaborativebookmarking") === null)
+    localStorageCustom.setItem("usecollaborativebookmarking", true);
+CollaborativeBookmarkingAPI.active = localStorageCustom.getItem("usecollaborativebookmarking") === "true" ? true : false;
 
 
-    var location;
-    try {
-        location = window.parent.location.href;
-
-    } catch (error) {
-        location = this.static_share_url;
-    }
-    
-    var regex = new RegExp("[?]?" + this.get_key + "=([^&]*)");
-    location = location.replace(regex, "");
-    location = location.replace("&&", "&");
-    var delimiter = "?";
-    if (location.indexOf("?") > 0)
-        delimiter = "&";
-
-    return location + delimiter + this.get_key + "=" + id;
-};
-
-
-CollaborativeBookmarkingAPI.copyLink = function () {
-    var link = jQuery('#share-collection-link').children("span")[0];
-    var range = document.createRange();
-    range.selectNode(link);
-    try {
-        window.getSelection().addRange(range);
-    } catch (err) {
-        //Ignore! (e.g "Discontiguous selection is not supported.")
-        console.info("Ignore that error above :-)");
-        window.getSelection().addRange(range);
-    }
-
-    try {
-        // Now that we've selected the anchor text, execute the copy command  
-        var successful = document.execCommand('copy');
-        var msg = successful ? 'successful' : 'unsuccessful';
-        console.log('Copy email command was ' + msg);
-    } catch (err) {
-        console.log('Oops, unable to copy');
-    }
-
-    // Remove the selections - NOTE: Should use
-    // removeRange(range) when it is supported  
-    window.getSelection().removeAllRanges();
-};
-
-CollaborativeBookmarkingAPI.storeCollection = function () {
-    console.log("Storing collection");
-    var on_success = function (data) {
-
-        jQuery('#share-collection-link span').html(this.buildLink(data.id));
-        jQuery('#share-collection-link').show();
-        console.log("Recevied message from cb-server", data);
-    }.bind(this);
-
-
-    var data = {
-        //collection: visTemplate.getData(),    //Nope! We have the filters and may want to remove them later
-        collection: globals.data, // All items!
-        filters: FilterHandler.filters,
-        query: globals["query"],
-        profile: globals["profile"],
-        query_id: globals["queryID"]
-    };
-
-    // Prevent error on stringifying a recursive loop...
-    for (var f_count = 0; f_count < data.filters.length; f_count++) {
-        var curr_f = data.filters[f_count];
-
-        for (var f_data in curr_f.dataWithinFilter) {
-            if (typeof curr_f.dataWithinFilter[f_data].geoMarker !== "undefined")
-                curr_f.dataWithinFilter[f_data].geoMarker = null;
-        }
-    }
-
-
-
-    var id = this.createId();
-    jQuery.ajax(
-        this.server,
-        {
-            method: "POST",
-            data: {
-                method: "storecollection",
-                id: id,
-                data: JSON.stringify(data)
-            },
-            dataType: 'json'
-        }
-    ).done(on_success)
-        .error(function (data) {
-            console.log("ERROR:", data);
-        });
-
-};
-
-
-CollaborativeBookmarkingAPI.showNewDataOverwriteConfirmDialog = function () {
-    var result = confirm("New results arrived. Do you want to replace the current shared collection with those results?");
-
-    if (result)
-        CollaborativeBookmarkingAPI.new_data_behavior = CollaborativeBookmarkingAPI.NEW_RESULT_HANDLE_OPTIONS.LET_OVERWRITE;
-    else
-        CollaborativeBookmarkingAPI.new_data_behavior = CollaborativeBookmarkingAPI.NEW_RESULT_HANDLE_OPTIONS.BLOCK;
-
-    return result;
-};
-
-
-CollaborativeBookmarkingAPI.loadCollection = function (id, rd_on_data_fct) {
-
-    var on_success = function (response_data) {
-
-        CollaborativeBookmarkingAPI.new_data_behavior = CollaborativeBookmarkingAPI.NEW_RESULT_HANDLE_OPTIONS.ASK;
-
-        console.log(response_data);
-        var data = response_data.data;
-
-
-        console.log("DATA RECEIVED", data);
-
-        var dataReceived = {
-            result: data.collection,
-            queryID: data.query_id,
-            query: data.query,
-            profile: data.profile
-        };
-
-        rd_on_data_fct(dataReceived);
-
-
-        var vispanel = BOOKMARKDIALOG.FILTER.vis_panel_getter_fct();
-
-        var max_tries_to_apply_filter = 10000;
-        var curr_tries_to_apply_filter = 0;
-        var apply_filters_async = function () {
-            window.setTimeout(function () {
-                try {
-
-                    curr_tries_to_apply_filter++;
-                    if (curr_tries_to_apply_filter > max_tries_to_apply_filter) {
-                        console.error("Too much tries to apply filter. Apport");
-                        return;
-                    }
-
-
-                    FilterHandler.applyFiltersFromOtherBmCollection({
-                        items: data.collection,
-                        filters: data.filters
-                    },
-                        vispanel.getMicroVisMapping()
-                        );
-                    BOOKMARKDIALOG.FILTER.updateData();
-                } catch (error) {
-                    console.log("Got an error in applying filters... retrying...");
-                    apply_filters_async();
-                    return;
-                }
-            }, 500);
-        };
-        apply_filters_async();
-
-
+CollaborativeBookmarkingAPI.loadCollection = function (guid, callback) {
+    var on_success_load_coll = function (data) {
+        //console.log(JSON.parse(data.responseText));
+        CollaborativeBookmarkingAPI.loaded_collections[guid] = (JSON.parse(data.responseText).data);
+        //console.log(data.responseText, JSON.parse(data.responseText).data);
+        callback();
     };
 
     jQuery.ajax(
@@ -194,7 +25,121 @@ CollaborativeBookmarkingAPI.loadCollection = function (id, rd_on_data_fct) {
             method: "POST",
             data: {
                 method: "getcollection",
-                id: id
+                guid: guid
+            },
+            dataType: 'json'
+        }
+    )
+        .complete(on_success_load_coll)
+        .error(function (data) {
+            console.log("ERROR:", data);
+        });
+};
+
+
+CollaborativeBookmarkingAPI.loadAllCollections = function (callback) {
+
+    var on_success_load_ids = function (data) {
+
+
+        var collection_ids = JSON.parse(data.responseText).collections;
+
+        var num_colls_to_load = collection_ids.length;
+        var num_colls_loaded = 0;
+
+        if (num_colls_to_load === 0)
+            callback();
+
+        for (var i = 0; i < collection_ids.length; i++) {
+            var guid = collection_ids[i];
+            CollaborativeBookmarkingAPI.loadCollection(guid, function () {
+
+                num_colls_loaded++;
+                if (num_colls_loaded === num_colls_to_load)
+                    callback();
+            });
+        }
+
+        CollaborativeBookmarkingAPI.init_loaded = true;
+    }.bind(this);
+
+
+
+    jQuery.ajax(
+        this.server,
+        {
+            method: "POST",
+            data: {
+                method: "getAllCollectionIds"
+            },
+            dataType: 'json'
+        }
+    )
+        .complete(on_success_load_ids)
+        .error(function (data) {
+            console.log("ERROR:", data);
+        });
+
+};
+
+
+/**
+ * 
+ * @param {type} query_id_overwrite E.g. Name of the collection
+ * @param {string} guid If Set the collection with that guid is overwritten on the server
+ * 
+ */
+CollaborativeBookmarkingAPI.storeCollection = function (collection, query_id_overwrite, callback) {
+    console.log("Storing collection", collection);
+    var on_success = function (data) {
+        console.log("Storing Collection: Recevied message from cb-server", data);
+        if (callback)
+            callback();
+    }.bind(this);
+
+    var data = null;
+
+    if (collection)
+        data = collection;
+    else
+        data = {
+            //items: visTemplate.getData(),    //Nope! We have the filters and may want to remove them later
+            items: globals.data, // All items!
+            filters: FilterHandler.filters,
+            query: globals["query"],
+            profile: globals["profile"]
+        };
+
+    for (var i = 0; i < data.items.length; i++) {
+        if (typeof data.items[i].facets === "undefined") {
+            //data.items[i] = BOOKMARKDIALOG.Tools.mapItemFromV2toV1(data.items[i]);
+        }
+    }
+
+    data.query_id = query_id_overwrite ? query_id_overwrite : globals["queryID"];
+
+    //console.log("COLLECTION TO STORE: ", data);
+
+    // Prevent error on stringifying a recursive loop...
+    if (data.filters) {
+        for (var f_count = 0; f_count < data.filters.length; f_count++) {
+            var curr_f = data.filters[f_count];
+            for (var f_data in curr_f.dataWithinFilter) {
+                if (typeof curr_f.dataWithinFilter[f_data].geoMarker !== "undefined")
+                    curr_f.dataWithinFilter[f_data].geoMarker = null;
+            }
+        }
+    }
+
+
+    jQuery.ajax(
+        this.server,
+        {
+            method: "POST",
+            data: {
+                method: "storecollection",
+                data: JSON.stringify(data),
+                guid: data.guid ? data.guid : null
             },
             dataType: 'json'
         }
@@ -202,49 +147,74 @@ CollaborativeBookmarkingAPI.loadCollection = function (id, rd_on_data_fct) {
         .error(function (data) {
             console.log("ERROR:", data);
         });
-    ;
+
 };
 
 
-CollaborativeBookmarkingAPI.getGetId = function () {
 
-    var key = this.get_key;
+CollaborativeBookmarkingAPI.createSettingsEntry = function () {
 
-    var expr = new RegExp(key + "=([^&]*)");
+    var settings_container = jQuery("#eexcess_settings_experimental_container");
 
-    var url = "";
-    try {
-        url = window.parent.location.search;
-    } catch (error) {
-        console.warn("Could not get URL of parent frame due to other protocol. Getting a collaborative bookmarking key not possible!");
-        return false;
-    }
+    var title = jQuery('<div/>', {
+        id: "eexcess-options-collbookmarking"
+    }).append(jQuery('<p/>', {
+        text: "Collaborative Bookmarking"
+    }));
 
-    var ret = expr.exec(url);
-    if (ret === null)
-        return false;
+    settings_container.append(title);
 
-    var value = RegExp.$1;
-    if (value && value.length)
-        return value;
-    return false;
+    var options = jQuery('<fieldset/>');
+    var container = jQuery('<div/>', {
+        id: "eexcess-options-cb-container"
+    });
+    options.append(container);
+
+
+    var curr_val = localStorageCustom.getItem("usecollaborativebookmarking");
+
+    container.append(
+        jQuery('<p/>').append(
+        jQuery('<input/>', {
+            type: "radio",
+            name: "option_collbookmarking_toggle",
+            id: "option_collbookmarking_toggle_off",
+            value: "false",
+            checked: curr_val === "false" ? "checked" : null
+        }),
+        jQuery('<label for="option_collbookmarking_toggle_off"/>', {
+        }).html("OFF")
+        ),
+        jQuery('<p/>').append(
+        jQuery('<input/>', {
+            type: "radio",
+            name: "option_collbookmarking_toggle",
+            id: "option_collbookmarking_toggle_on",
+            value: "true",
+            checked: curr_val === "true" ? "checked" : null
+        }),
+        jQuery('<label for="option_collbookmarking_toggle_on"/>', {
+        }).html("ON")
+        )
+        );
+
+    settings_container.append(options);
+
+
+    jQuery('input[name="option_collbookmarking_toggle"]').change(function () {
+
+        var button_val = jQuery(this).attr("value");
+
+        var current_setting = localStorageCustom.getItem("usecollaborativebookmarking");
+
+        if (button_val === current_setting)
+            return;
+
+        if (button_val === "true")
+            localStorageCustom.setItem("usecollaborativebookmarking", true);
+        else
+            localStorageCustom.setItem("usecollaborativebookmarking", false);
+        window.location.reload();
+    });
+
 };
-
-
-CollaborativeBookmarkingAPI.createId = function () {
-    var charSet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    var id = '';
-    for (var i = 0; i < 15; i++) {
-        var r = Math.floor(Math.random() * charSet.length);
-        id += charSet.substring(r, r + 1);
-    }
-    return id;
-};
-
-
-CollaborativeBookmarkingAPI.NEW_RESULT_HANDLE_OPTIONS = {
-    ASK: 0,
-    BLOCK: 1,
-    LET_OVERWRITE: 2
-};
-CollaborativeBookmarkingAPI.new_data_behavior = CollaborativeBookmarkingAPI.NEW_RESULT_HANDLE_OPTIONS.LET_OVERWRITE;

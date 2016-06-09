@@ -7,13 +7,13 @@ var IQHN = IQHN || {};
 IQHN.ToolbarHandler = function () {
 
     this.buttons_ = [];
-    this.preRender();
+    this.render();
     IQHN.Debugger.debug("ToolbarHandler", "Creating toolbar", 3);
 };
 /**
  * Creates the HTML of the Toolbar.
  */
-IQHN.ToolbarHandler.prototype.preRender = function () {
+IQHN.ToolbarHandler.prototype.render = function () {
 
     IQHN.Debugger.debug("ToolbarHandler", "Rendering toolbar", 5);
     var toolbar_config = IQHN.config.rec_dashboard.toolbar;

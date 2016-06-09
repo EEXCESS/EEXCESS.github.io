@@ -161,7 +161,8 @@ function Visualization( EEXCESSobj ) {
         
 		if (settings.selectedChart != undefined){
 			$(chartSelect).val(settings.selectedChart).change();
-		}		
+			$('#eexcess-chartselection .chartbutton').removeClass('active').filter('[data-targetchart=' + settings.selectedChart + ']').addClass('active');
+		}			
 		
 		if (settings.hideControlPanel != undefined){
 			if (settings.hideControlPanel)
@@ -331,7 +332,14 @@ function Visualization( EEXCESSobj ) {
         $(chartSelect).unbind('change');
         CONTROLS.buildChartSelect();
         LIST.buildContentList();
-		FILTER.buildFilterBookmark();
+        
+        if (CollaborativeBookmarkingAPI.active && CollaborativeBookmarkingAPI.init_loaded)
+            FILTER.buildFilterBookmark();
+        else
+            CollaborativeBookmarkingAPI.loadAllCollections(function(){
+                FILTER.buildFilterBookmark();
+            }.bind(this));
+        
 		BOOKMARKS.exportBookmarks();
 		BOOKMARKS.importBookmarks();
 		BOOKMARKS.handleBookmarkEditButton();
@@ -381,6 +389,9 @@ function Visualization( EEXCESSobj ) {
     };
     START.getEventHandlerObj = function () {
         return EVTHANDLER;
+    };
+    START.getFilterObj = function(){
+        return FILTER;
     };
     START.getBookmarkedItems = function(){
       return BOOKMARKDIALOG.BOOKMARKS.bookmarkedItems;  
@@ -790,7 +801,7 @@ function Visualization( EEXCESSobj ) {
 
         dialogGlobalSettings.append("div")
             .attr("class", "eexcess-bookmark-dialog-title")
-            .text("Global Settings");
+            .text("Experimental Features");
 		
         // Append details section
    		var tagCloudChooserContainer = dialogGlobalSettings.append('div')
@@ -836,12 +847,13 @@ function Visualization( EEXCESSobj ) {
         
         
         
-        var experimental_container = jQuery("<div id='eexcess_settings_experimental_container'><p><strong>EXPERIMENTAL FEATURES:</strong></p></div>");
+        var experimental_container = jQuery("<div id='eexcess_settings_experimental_container'> </div>");
         $("#global-setttings-dialog").append(experimental_container);
         
         if (VizRecConnector)
             VizRecConnector.createSettingsEntry();        
-       
+        
+        CollaborativeBookmarkingAPI.createSettingsEntry();
        
        dialogGlobalSettings.append("div").style("text-align", "center" )       
        		.append("input")
@@ -1200,7 +1212,7 @@ function Visualization( EEXCESSobj ) {
 
 		facetPartnerIconsDiv.append("img")
 			.attr("class", "eexcess_partner_icon")
-			.attr("title", function(d){ return d.facets.provider; })
+			.attr("title", function(d){return (typeof d.facets !== "undefined" ? d.facets.provider : "provider"); })
 			.attr("src", function(d){ return d['provider-icon']; });
 
 		var bookmarkDiv = aListItem.append('div')

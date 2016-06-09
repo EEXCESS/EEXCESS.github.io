@@ -184,7 +184,7 @@ IQHN.Recommendation.prototype.setBaseColor = function () {
 /**
  * Render the collection and its subnodes
  */
-IQHN.Recommendation.prototype.preRender = function () {
+IQHN.Recommendation.prototype.render = function () {
 
     if (!this.dirty_)
         return;
@@ -197,7 +197,7 @@ IQHN.Recommendation.prototype.preRender = function () {
     for (var key in this.vis_data_.gl_objects) {
         if (this.vis_data_.gl_objects.hasOwnProperty(key)) {
             if (this.vis_data_.gl_objects[key])
-                this.vis_data_.gl_objects[key].preRender();
+                this.vis_data_.gl_objects[key].render();
         }
     }
 
@@ -443,7 +443,7 @@ IQHN.Recommendation.prototype.getPosition = function (physical) {
             throw ("Could not find gl-node of recommendation");
 
         //Necessary to update position of mesh
-        gl_node.preRender();
+        gl_node.render();
 
         var circle_mesh = gl_node.getCircle();
 

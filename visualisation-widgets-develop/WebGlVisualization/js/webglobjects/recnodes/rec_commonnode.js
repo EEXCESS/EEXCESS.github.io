@@ -62,7 +62,7 @@ IQHN.RecommendationCommonNode.prototype.initAndRegisterGlObj = function (mesh_pa
 
 };
 
-IQHN.RecommendationCommonNode.prototype.preRender = function () {
+IQHN.RecommendationCommonNode.prototype.render = function () {
 
     if (!this.dirty_)
         return;

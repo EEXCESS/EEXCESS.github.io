@@ -64,7 +64,7 @@ IQHN.CollectionCenterNode.prototype.initAndRegisterGlObj = function (mesh_parent
 
 
 
-IQHN.CollectionCenterNode.prototype.preRender = function () {
+IQHN.CollectionCenterNode.prototype.render = function () {
 
     if (!this.dirty_)
         return;

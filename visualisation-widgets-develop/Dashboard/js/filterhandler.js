@@ -42,7 +42,6 @@ var FilterHandler = {
         var categorySettings = { dimension: selectedColorDimension, dimensionValues: [] };
 
         for (var i = 0; i < orignalData.length; i++) {
-            console.log(orignalData[i]);
             var currentYear = orignalData[i].facets.year;
             currentYear = getCorrectedYear(currentYear)
             if ($.isNumeric(currentYear)) {
@@ -386,6 +385,13 @@ var FilterHandler = {
         var ret = timeline_microvis_settings.getInitData(bookmarks.items, mapping);
         bookmarks.items = ret.data;
         bookmarked_filters.forEach(function(f){
+
+            // Occurs on filter of shared-collections --> No problems..
+            if (typeof f.dataWithinFilter_ids === "undefined") {
+                //console.warn("dataWithinFilter_ids in filter undefined");
+                return;
+            }
+            
            var data_within_filter = underscore.filter(bookmarks.items, function(n,i){
                var item_id = n.id;
                if (f.dataWithinFilter_ids.indexOf(item_id) < 0)
@@ -428,7 +434,8 @@ var FilterHandler = {
         // Don't aks why... it works...
         var timeline_microvis_settings = new VisSettings("timeline");
         var ret = timeline_microvis_settings.getInitData(bookmarks.items, mapping);
-        bookmarks.items = ret.data;
+        //bookmarks.items = ret.data;
+        bookmarks.items = this.vis.getData();
         bookmarked_filters.forEach(function(f){
             
             // Occurs on filter of shared-collections --> No problems..
@@ -449,9 +456,10 @@ var FilterHandler = {
         
 
         
+        var filtered_ids = this.mergeFilteredDataIds();
 
         this.filters = bookmarked_filters;    
-        this.ext.filterData(this.mergeFilteredDataIds());
+        this.ext.filterData(filtered_ids);
 
         bookmarked_filters.forEach(function(f){
             if (f.type === "list")
@@ -487,7 +495,7 @@ var FilterHandler = {
         for (var i=0; i<filters.length; i++) {
             var filter = filters[i];
             var filter_obj = visTemplate.getPluginVis(filter.type);
-            var data_to_filter = globals.data.slice();
+            var data_to_filter = FilterHandler.vis.getData();
             
             this.initializeData(data_to_filter, mapping, true);
             //Data warmup...
