@@ -67,6 +67,12 @@ SS.Screenshot.prototype.createBindings = function () {
         jQuery('.filter-keep').click(function (e) {
             var filterelement = jQuery(this).parent().parent().parent();
             var title = filterelement.find("h4").html() + '-filter';
+
+            if (that.screenshotMode == 'MainVis'){
+                that.screenshot('Main-'+title, '#eexcess_vis_panel', 0);
+                return;
+            }
+            
             window.setTimeout(function () {
                 console.log(filterelement.attr("id"));
 
