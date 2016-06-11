@@ -73,8 +73,13 @@ SS.Screenshot.prototype.createBindings = function () {
                 // 2 different screenshot modes: 
 
                 if (that.screenshotMode == 'MainVis'){
-                    that.screenshot('Main-'+title, '#eexcess_vis_panel', 0);
-                    console.log('MainVis');
+                    var timeout = 0;
+                    if (title=='Geo')
+                        timeout = 1500;
+                    window.setTimeout(function () {
+                        that.screenshot('Main-'+title, '#eexcess_vis_panel', 0);
+                        console.log('MainVis');
+                    }, 100);
                 } else {
 
                     var selector = "#" + filterelement.attr("id");
