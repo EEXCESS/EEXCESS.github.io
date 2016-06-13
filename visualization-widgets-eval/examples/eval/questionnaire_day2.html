@@ -1914,8 +1914,11 @@ margin:0px;}
     var showScreenshotUrlGrid = 'showscreenshotsGrid.phtml?';
 
     // reload iFrame
+    var $onNextClicked_nextIframe;
     jQuery('.form-pagebreak-next').on('click', function(){
-        var $nextIframe = jQuery(this).closest('.form-section.page-section').next().find('iframe'); 
+        var $nextPage = jQuery(this).closest('.form-section.page-section').next();
+        var $nextIframe = $nextPage.find('iframe'); 
+
         if ($nextIframe.length > 0){
             $nextIframe.attr( 'src', function ( i, oldSource ) { 
                 // eg: https://ext250.know-center.tugraz.at/dashboard/screenshot_rep/screenshotserver/eval/showscreenshots.phtml?sessionId=1&refUsers=1_2&pos=1&css=filtersOnly
@@ -1923,6 +1926,18 @@ margin:0px;}
                 //	oldSource += '&timestamp' + new Date().getTime();
                 var url = getIframeUrl($nextIframe.attr('id'));
                 return url; 
+            });
+            $onNextClicked_nextIframe = $nextIframe;
+            // Set Text:
+            $nextPage.find('.form-line label').each(function(){
+                if (jQuery(this).text() == "I could remember the text/micro/main filters"){
+                    var questionText = "text filters";
+                    if (prefixAsChars[sessionId-1] == 'M')
+                        questionText = "micro visualisation filters";
+                    else if (prefixAsChars[sessionId-1] == 'V')
+                        questionText = "main visualisations";
+                    jQuery(this).text('I could remember the ' + questionText);
+                }
             });
         }
 
@@ -1938,16 +1953,26 @@ margin:0px;}
         }
     });
 
-
+    function listener(event){
+        if (event.data.action == "setHeight" && $onNextClicked_nextIframe && $onNextClicked_nextIframe.length > 0 ){
+            console.log('set Height !');
+            $onNextClicked_nextIframe.css('height', event.data.height);
+        }
+    }
+    if (window.addEventListener){
+        addEventListener("message", listener, false)
+    } else {
+        attachEvent("onmessage", listener)
+    }
 
     //https://ext250.know-center.tugraz.at/dashboard/screenshot_rep/screenshotserver/eval/showscreenshots.phtml?sessionId=1&refUsers=1_2&pos=1&styleclass=filtersOnly
     // css=filtersOnly
     // sessionId=1
     // refUsers=1_2
     // &pos=1&
-    var prefixAsChars = ['', '', '', '', ''];
+    var prefixAsChars = ['', '', '', '', ''], sessionId;
     function getIframeUrl(id){
-        var sessionId = null;
+        sessionId = null;
         if (!id || id.length < 8)
             return;
             
