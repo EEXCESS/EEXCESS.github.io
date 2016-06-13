@@ -1909,8 +1909,9 @@ margin:0px;}
 
 
 <script>
-    //$(document).on('ready', function(){
-    //alert('Finished');
+    var showScreenshotBaseUrl = 'https://ext250.know-center.tugraz.at/dashboard/screenshot_rep/screenshotserver/eval/';
+    var showScreenshotUrl = 'showscreenshots.phtml?';
+    var showScreenshotUrlGrid = 'showscreenshotsGrid.phtml?';
 
     // reload iFrame
     jQuery('.form-pagebreak-next').on('click', function(){
@@ -1936,6 +1937,7 @@ margin:0px;}
             }
         }
     });
+
 
 
     //https://ext250.know-center.tugraz.at/dashboard/screenshot_rep/screenshotserver/eval/showscreenshots.phtml?sessionId=1&refUsers=1_2&pos=1&styleclass=filtersOnly
@@ -1965,9 +1967,9 @@ margin:0px;}
         }
         url += 'sessionId=' + sessionId;
         var refUsers = '1_2'; // V
-        if (prefixAsChars[sessionId-1] == 'T')
+        if (prefixAsChars[sessionId-1] == 'T')			
             refUsers = '3_4';
-        else if (prefixAsChars[sessionId-1] == 'M')
+        else if (prefixAsChars[sessionId-1] == 'M')			
             refUsers = '5_6';
         url += '&refUsers=' + refUsers;
         var pos = 0;
@@ -1982,10 +1984,10 @@ margin:0px;}
             url += '&css=filtersOnly';
         else if (finalviewOnly)
             url += '&css=finalviewOnly';
-        url += '&timestamp' + new Date().getTime();
+        url += '&timestamp' + new Date().getTime();		
         return url;
     }
-    var onGettingEvalData = function (eval_server_data) {
+    var onGettingEvalData = function (eval_server_data) {		
         var userName = eval_server_data.user;
         var parts = userName.split('_');
         var userNamePrefix = undefined;
