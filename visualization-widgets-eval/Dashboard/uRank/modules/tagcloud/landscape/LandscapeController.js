@@ -8,6 +8,8 @@ var LandscapeController = (function(){
  	this.dataProcessor = "";
  	this.receivedData = {}
  	this.landscapeTagCloudBuilder = "";
+ 	var prevLandscapeScale = -1; 
+ 	var landscapeInitialScaleCounter= 0; 
  	var me = this;
 
 
@@ -235,10 +237,22 @@ var LandscapeController = (function(){
 
 	//------------------------------------------------------------------------
 	var zoomLandscape =  function() {
-		if(landscapeZoom.scale() == 1 && !d3.event.sourceEvent.ctrlKey) {
+		var landscapeScale = 	d3.select("#kdApp_landscape").attr("scale"); 
+		var scale = landscapeZoom.scale(); 
+
+		if(scale == 1 && prevLandscapeScale == 1 && landscapeInitialScaleCounter > 0) {
 			landscapeZoom.translate([0,0])
 		}
-		console.log("scale", landscapeZoom.scale())
+		if(scale == 1) {
+			prevLandscapeScale = -1; 
+			landscapeInitialScaleCounter = landscapeInitialScaleCounter > 7 ? 8: landscapeInitialScaleCounter+1; 
+		}
+		else {
+			landscapeInitialScaleCounter = 0; 
+			prevLandscapeScale = scale; 
+		}
+
+	
 	
 		d3.select("#kdApp_landscape").attr("transform", "translate(" +  landscapeZoom.translate() + ")" + " scale(" + landscapeZoom.scale() + ")");
 	
@@ -253,6 +267,7 @@ var LandscapeController = (function(){
 		.y(d3.scale.linear().range([0, landscapeConfig.getHeight()]))
 		.extent(brushExtent)
 		.on("brushstart", function() {	
+		    console.log("brushstart");
 			if(d3.event.sourceEvent.ctrlKey) {
 				return; 
 			}
@@ -266,6 +281,7 @@ var LandscapeController = (function(){
 			
 		})
 		.on("brush", function() { 
+		    console.log("brush")
 			if(d3.event.sourceEvent.ctrlKey) {
 				return; 
 			}
@@ -321,36 +337,17 @@ var LandscapeController = (function(){
 	               LoggingHandler.log({ action: "Brush created", source: "landscape", value: "", itemCountOld: itemCountOld, itemCountNew: itemCountNew});
 			         itemCountOld = itemCountNew;
 			     }
-
+				landscapeZoom.on("zoom",zoomLandscape);
+				landscapeZoom.translate(landscapeTranslate)
+				landscapeZoom.scale(landscapeScale)		
 				//me.stateCurrent.resetZoom(translate, scale);
 	
 			}
 			else {
-		
 			    var tagCloudObj = {"keywords": me.receivedData.keywords.slice(0, 50),  "data" :  me.receivedData}
                 landscapeController.stateCurrent.drawTagsCloud(tagCloudObj);
-				var selectedLabelsElems= $("#landscapeLabel").find("text.isSelected");
-				var labels = []; 
-				selectedLabelsElems.each(function(index, label) {
-					labels.push($(label).text());
-				})
-				var cloudTags = $("#eexcess_landscape_tag_cloud").find(".urank-tagcloud-tag");
-				var tagsPositions = []; 
-				cloudTags.each(function(index, tag) {
-					var keyword = $(tag).clone().children().remove().end().text();
-					if (labels.indexOf(keyword) > -1) {
-						var pos = $(tag).attr("tag-pos");
-						tagsPositions.push(pos); 
-					}
-
-				});
-				for(var i=0; i < tagsPositions.length; i++) {
-					landscapeController.stateCurrent.wordsCloud.onTagInCloudClick(tagsPositions[i]);
-				}; 
 			}
-			landscapeZoom.on("zoom",zoomLandscape);
-			landscapeZoom.translate(landscapeTranslate)
-			landscapeZoom.scale(landscapeScale)		
+			
 	
 		});
 	}; 

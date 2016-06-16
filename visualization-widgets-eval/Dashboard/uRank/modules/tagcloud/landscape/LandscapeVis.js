@@ -1,7 +1,7 @@
 function LandscapeVis(root, visTemplate, EEXCESSobj) {
 
 	var LANDSCAPE = {};
-    LANDSCAPE.Settings = VisSettings ? new VisSettings('landscape') : new Settings('landscape');
+	LANDSCAPE.Settings = new Settings('landscape');
 	var EEXCESS = EEXCESSobj || {};
 	var domRoot = root; 
 	var Vis = visTemplate;
@@ -120,7 +120,7 @@ function LandscapeVis(root, visTemplate, EEXCESSobj) {
 		var color = d3.scale.category10();		
 		LANDSCAPE.Ext.colorScale = color;
 		
-        $("#eexcess_landscape_box").empty(); 
+        $("#eexcess_landscape_box").remove(); 
         LANDSCAPE.Dimensions = LANDSCAPE.Settings.getDimensions(domRoot, iWidth, iHeight);
         var landscapeWidth = LANDSCAPE.Dimensions.landscape.width-30; 
         var landscapeHeight = LANDSCAPE.Dimensions.landscape.height; 
@@ -185,7 +185,7 @@ function LandscapeVis(root, visTemplate, EEXCESSobj) {
       	var loadingLandscape = "<div id=\"loadingLandscape\" style=\"margin-top: "+ (height/2)+"px;\"></br><img src=\"uRank/modules/tagcloud/landscape/images/ajax-loader.gif\"/></div>";
         var landscapeDiv = loadingLandscape + landscapeBoxDiv + landscapeLabelsDragableDiv +  closeDiv + landscapeHeader + closeDiv +  landscapeMainVis + closeDiv + landscapeTagCloudVis + closeDiv + closeDiv; 
 		
-		var legendWrapper = d3.select(domRoot).append("div").attr("id", "div-landscape-wrap-legends"); 
+		var legendWrapper = d3.select(domRoot).append("div").attr("id", "div-landscape-wrap-legends").style("width", "6.2em"); 
 		$(domRoot).append(landscapeDiv); 
 		
 		
@@ -223,14 +223,11 @@ function LandscapeVis(root, visTemplate, EEXCESSobj) {
 	    });
 
 	    data.keywords = LANDSCAPE.Internal.extendKeywordsWithColorCategory(keywordExtractor.getCollectionKeywords()); 
-		data.keywords = _(data.keywords).filter(function(item) {
-		     return item.term !== "ERROR"; 
-		});
-		data.keywordsDict = keywordExtractor.getCollectionKeywordsDictionary(); 
+	    data.keywordsDict = keywordExtractor.getCollectionKeywordsDictionary(); 
 		landscapeController = new LandscapeController(data, keywordExtractor);
         landscapeConfig = new LandscapeConfig();
 	  
-		//setTimeout(function() {
+		setTimeout(function() {
 			landscapeConfig = new LandscapeConfig();
 			landscapeConfig.setLandscapeType("standaloneLandscape");
 			landscapeController.drawLandscape(data);
@@ -248,29 +245,20 @@ function LandscapeVis(root, visTemplate, EEXCESSobj) {
 				.on( "mouseout", LANDSCAPE.Evt.legendMouseOuted );
 		    legend.append("div")
 			 .attr("x", width + 126)
-			 .attr("title", function(d){ return d.item; })
 			 .style("background", function(d, i){ return color(d.item); });
 		    legend.append("text")
 			 .attr("x", width +120)
 			 .attr("y", 9)
 			 .attr("dy", ".35em")
 			 .style("text-anchor", "end")
-			 .text(function(d) {  
-				var threshold = 10; 
-				var item = d.item; 
-				if(item.length > threshold) {
-					return item.substr(0, threshold-3) + "..."; 
-				}
-				return item; 
-			}).attr("title", function(d){ return d.item; });
-			
+			 .text(function(d) { return d.item; });
 			var keywordsData = keywordExtractor.getCollectionKeywords();
 			var numOfTags = data.keywords.length > 50  ? 50 : data.keywords.length;  
-			var tagCloudObj = {"keywords": data.keywords.slice(0, numOfTags),  "data" : data}
+			var tagCloudObj = {"keywords": data.keywords.slice(0, tagCloudObj),  "data" : data}
 			
 			landscapeController.stateCurrent.drawTagsCloud(tagCloudObj);
 		     $("#loadingLandscape").remove();
-		//}, 200); 
+		}, 200); 
 	};
 	
 	
@@ -278,30 +266,30 @@ function LandscapeVis(root, visTemplate, EEXCESSobj) {
 	 *	Legend events' handlers
 	 * */
 	LANDSCAPE.Evt.legendClicked = function( legendDatum, legendIndex ){
-		// LANDSCAPE.Render.HighlightFilteredFacet( legendDatum.item, legendIndex, legendDatum.selected );
+		LANDSCAPE.Render.HighlightFilteredFacet( legendDatum.item, legendIndex, legendDatum.selected );
 		
 	};
 	
 	
 	LANDSCAPE.Evt.legendMouseOvered = function(d){
-		/*d3.select(this).select("div")
+		d3.select(this).select("div")
 			.style("border", "0.1em yellow solid")
 			.style("width", "1.4em")
 			.style("height", "1.4em");
 
 		d3.select(this).select("text")
-			.style("font-size", "0.9em"); */
+			.style("font-size", "0.9em");
 	};
 	
 	
 	LANDSCAPE.Evt.legendMouseOuted = function(d){
-		/*d3.select(this).select("div")
+		d3.select(this).select("div")
 			.style("border", function(){ if(d.selected) return "0.1em lime solid"; return "none"; })
 			.style("width",  function(){ if(d.selected) return "1.4em"; return "1.5em"; })
 			.style("height", function(){ if(d.selected) return "1.4em"; return "1.5em"; });
 
 		d3.select(this).select("text")
-			.style("font-size", "0.85em"); */
+			.style("font-size", "0.85em");
 		
 	};
 	

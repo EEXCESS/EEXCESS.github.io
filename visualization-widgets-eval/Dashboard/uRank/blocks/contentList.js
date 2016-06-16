@@ -79,30 +79,21 @@ var ContentList = (function(){
 
         var onLiClick = function(event){
             event.stopPropagation();
-            if(_this.opt.customOptions.misc.hideUrankedItems)
-            	hideUnrankedListItems();
+            hideUnrankedListItems();
             if(!$(this).hasClass(liUnrankedClass))
                 s.onItemClicked.call(this, id, event);
         };
         var onLiMouseEnter = function(event){
-        	if(_this.opt.customOptions.misc.stopPropagation)
-            	event.stopPropagation();
-             s.onItemMouseEnter.call(this, id);
+            event.stopPropagation(); s.onItemMouseEnter.call(this, id);
         };
         var onLiMouseLeave = function(event){
-        	if(_this.opt.customOptions.misc.stopPropagation)
-            	event.stopPropagation();
-             s.onItemMouseLeave.call(this, id);
+            event.stopPropagation(); s.onItemMouseLeave.call(this, id);
         };
         var onWatchiconClick = function(event){
-        	if(_this.opt.customOptions.misc.stopPropagation)
-            	event.stopPropagation();
-			s.onWatchiconClicked.call(this, event.data);
+            event.stopPropagation(); s.onWatchiconClicked.call(this, event.data);
         };
         var onFaviconClick = function(event){
-        	if(_this.opt.customOptions.misc.stopPropagation)
-            	event.stopPropagation();
-			s.onFaviconClicked.call(this, event.data, event);
+            event.stopPropagation(); s.onFaviconClicked.call(this, event.data, event);
         };
 
         $li.off({
