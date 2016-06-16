@@ -627,7 +627,7 @@ margin:0px;}
             url += '&css=finalviewOnly';
         if (userName)
             url += '&userName=' + userName;
-        url += '&timestamp' + new Date().getTime();		
+        url += '&questionnnaireDay=' + questionnnaireDay + '&timestamp' + new Date().getTime();		
         return url;
     }
 
@@ -646,7 +646,7 @@ margin:0px;}
         jQuery('#cid_133 img').attr('src', 'readability-filter-Task4-' + (prefixAsChars[3] == 'T' ? 'T' : 'V') + '.JPG');
         jQuery('#cid_134 img').attr('src', 'readability-filter-Task5-' + (prefixAsChars[4] == 'T' ? 'T' : 'V') + '.JPG');
     }
-    
+
     var EVAL_SERVER = "https://ext250.know-center.tugraz.at/dashboard/screenshot_rep/screenshotserver/";
     var userNameFromUrl = getUrlParameter('userName');
     if (userNameFromUrl && questionnnaireDay != 1){
