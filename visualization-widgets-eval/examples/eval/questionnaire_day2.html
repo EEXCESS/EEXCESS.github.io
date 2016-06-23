@@ -497,12 +497,15 @@ margin:0px;}
     var showScreenshotUrlGrid = 'showscreenshotsGrid.phtml?';
 
     // reload iFrame
-    var $onNextClicked_nextIframe, userName;
+    var $onNextClicked_nextIframe, userName, sessionId;
+    jQuery('iframe').attr('src','about:blank');
     jQuery('.form-pagebreak-next').on('click', function(){
         var $nextPage = jQuery(this).closest('.form-section.page-section').next();
         var $nextIframe = $nextPage.find('iframe:not(#customFieldFrame_64):not(#customFieldFrame_86)'); // customFieldFrame_64 = youtube
-
+        
+        var selectionPageOpening = false;
         if ($nextIframe.length > 0){
+            selectionPageOpening = true;
             $nextIframe.attr( 'src', function ( i, oldSource ) { 
                 // eg: https://ext250.know-center.tugraz.at/dashboard/screenshot_rep/screenshotserver/eval/showscreenshots.phtml?sessionId=1&refUsers=1_2&pos=1&css=filtersOnly
                 //if (oldSource.indexOf('timestamp') < 0)
@@ -533,6 +536,7 @@ margin:0px;}
                 }
             });
         }
+        saveStartedData(selectionPageOpening, $nextPage);
 
         var $currentIframe = jQuery(this).closest('.form-section.page-section').find('iframe');
         if ($currentIframe.length > 0){
@@ -572,7 +576,7 @@ margin:0px;}
     // sessionId=1
     // refUsers=1_2
     // &pos=1&
-    var prefixAsChars = ['', '', '', '', ''], sessionId;
+    var prefixAsChars = ['', '', '', '', ''];
     function getIframeUrl(id){
         sessionId = null;
         if (!id || id.length < 8)
@@ -671,7 +675,27 @@ margin:0px;}
             jQuery('.validate\\[required\\]').removeClass('validate[required]');
             console.warn('required removed');
         }
-    });
+    });    
+    function saveStartedData(selectionPageOpening, $nextPage){
+        var nextPagesTitle = undefined;
+        var $firstRow = $nextPage.find('li:first()');
+        nextPagesTitle = $firstRow.find('h1, h2, h3').first().text();
+        if (!nextPagesTitle)
+            nextPagesTitle = $firstRow.find('label').first().text();
+        if (!nextPagesTitle)
+            nextPagesTitle = $firstRow.text();
+        nextPagesTitle = jQuery.trim(nextPagesTitle).replace(/\n/g, ' ').replace(/  */g, ' ');
+        //console.log(nextPagesTitle);
+
+        var data = {selectionPageOpened: selectionPageOpening, userName: userName, session: sessionId, timestamp: new Date(), questionnnaireDay: questionnnaireDay, nextPagesTitle: nextPagesTitle };
+        jQuery.ajax({
+            type:'POST',
+            url: 'https://ext250.know-center.tugraz.at/dashboard/screenshot_rep/screenshotserver/eval/saveUsersSelection.php',
+            data: JSON.stringify(data),
+            success: function(){
+            }
+        });
+    }
 
 
 
