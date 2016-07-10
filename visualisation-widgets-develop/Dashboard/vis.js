@@ -854,7 +854,11 @@ function Visualization( EEXCESSobj ) {
             VizRecConnector.createSettingsEntry();        
         
         CollaborativeBookmarkingAPI.createSettingsEntry();
-       
+        
+        var webglvisplugin = PluginHandler.getByDisplayName("WebGlVis");
+        if (webglvisplugin)
+            webglvisplugin.Object.createSettingsEntry();
+        
        dialogGlobalSettings.append("div").style("text-align", "center" )       
        		.append("input")
             .attr("type", "button")
@@ -1371,6 +1375,7 @@ function Visualization( EEXCESSobj ) {
 		d3.selectAll(allListItems).classed("highlighted", false);
 		if (dataToHighlightIds == null){
 			d3.selectAll( allListItems ).style("opacity", "1");
+			$('#bookmarklist-label').html('Showing (' + allListItems.length + '):');
 			return;
 		}
 		
@@ -1389,6 +1394,7 @@ function Visualization( EEXCESSobj ) {
 		} else {
 			d3.selectAll( allListItems ).style("opacity", "1");
 		}
+		$('#bookmarklist-label').html('Showing (' + dataToHighlightIds.length + '):');
 		
 		//VISPANEL.updateCurrentChart( 'highlight_item_selected', null,  dataToHighlightIds); // todo: remove
 	};

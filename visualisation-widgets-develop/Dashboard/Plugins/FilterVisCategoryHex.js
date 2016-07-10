@@ -54,6 +54,18 @@
                          }
                        });
     };
+	
+	FilterVisCategoryHex.getSelectedValuesFromData = function (inputData) {
+		var categoryValues = [];
+        categoryValues[0] = [];
+        //adds selected category to be highlighted
+        inputData.data.forEach(function(d){
+            if (d.selected) {
+                categoryValues[0].push(d.language);
+            }
+        });
+		return categoryValues;
+	};
      
     /*
      * basic draw function
@@ -63,17 +75,19 @@
         if (!initializationFinished) {
             afterInitCallback = function () { FilterVisCategoryHex.draw(allData, inputData, $container, filters, settings); };
             return;
-        }
+        }   
         
         if (settings.textualFilterMode == 'textOnly'){
-            FilterVisCategoryHex.drawText($container, filters);
+            FilterVisCategoryHex.drawText($container, filters, inputData);
             return;
         }
         
         var base, svg, focus = null;
-        var categoryValues = underscore(filters).map('categoryValues');
+        //var categoryValues = underscore(filters).map('categoryValues');
+        var categoryValues = FilterVisCategoryHex.getSelectedValuesFromData(inputData);
         var selectedData = underscore(filters).map('dataWithinFilter');
         var category = "";
+
         if (filters.length > 0)
             category = filters[0].category;
 
@@ -94,21 +108,22 @@
         interactMiniBar(selectedData, category, categoryValues, data);
         
         if (settings.textualFilterMode == 'textAndViz'){
-            FilterVisCategoryHex.drawText($container, filters);
+            FilterVisCategoryHex.drawText($container, filters, inputData);
         }
     };
 
     FilterVisCategoryHex.finalize = function(){
     };
     
-    FilterVisCategoryHex.drawText = function ($container, filters){
+    FilterVisCategoryHex.drawText = function ($container, filters, inputData){
         var $vis = $container.find('.FilterVisCategoryHexText');
         if ($vis.length == 0){
             $vis = $('<div class="FilterVisCategoryHexText" style="text-align: center;"></div>').css('padding-top', '10px').css('padding-bottom', '10px');		
             $container.append($vis);
         }
 
-        $vis.html(filters[0].category + ': ' + underscore(filters[0].categoryValues).join(', '));
+        var categoryValues = FilterVisCategoryHex.getSelectedValuesFromData(inputData);
+        $vis.html(filters[0].category + ': ' + underscore(categoryValues).join(', '));
     };    
 
     /*
@@ -248,8 +263,8 @@
             stroke.transition().style("opacity", 0.2)
             fill.transition().style("opacity", 0.2);
             text.transition().style("opacity", 0.2);
-            categoryValues.forEach(function (d, i) {
-                var name = d[0];
+            categoryValues[0].forEach(function (d, i) {
+                var name = d;
                 name = name.replace(/[ .]/g, "_");
                 var path = "path#" + name;
                 var selectedfill = svg.selectAll(path);
